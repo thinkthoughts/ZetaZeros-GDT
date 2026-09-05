@@ -578,15 +578,16 @@ lemma exists_witness_avoiding_dvd {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ
 lemma squarefree_prime_dvd_split {n p : ℕ} (hsf : Squarefree n) (hp : p.Prime)
     (hpn : p ∣ n) : Nat.Coprime p (n / p) ∧ p * (n / p) = n := by
   obtain ⟨k, hk⟩ := hpn
-  have hdiv : n / p = k := by rw [hk, Nat.mul_div_cancel_left k hp.pos]
-  rw [hdiv]
-  refine ⟨?_, hk.symm⟩
-  by_contra hcop
-  have hpk : p ∣ k := by
-    by_contra hnd
-    exact hcop (hp.coprime_iff_not_dvd.mpr hnd)
-  have hppn : p * p ∣ n := by rw [hk]; exact Nat.mul_dvd_mul_left p hpk
-  exact hp.not_unit (hsf p hppn)
+  have hdiv : n / p = k := by
+    rw [hk, Nat.mul_div_cancel_left k hp.pos]
+  have hsf' : Squarefree (p * k) := by
+    rw [← hk]
+    exact hsf
+  have hcop_rp_p : Nat.Coprime rp p :=
+  (hp.coprime_iff_not_dvd.mpr (fun hdvd =>
+    absurd (Nat.le_of_dvd (Nat.pos_of_ne_zero hrp_ne_zero) hdvd)
+      (not_le.mpr hrp_lt))).symm
+  exact ⟨hcop, hk.symm⟩
 
 lemma R_squarefree {N m : ℕ} (hN : 0 < N) : Squarefree (R N m) := by
   have hdvd : R N m ∣ rad N := ⟨d N m, by rw [← d_mul_R_eq_rad hN]; ring⟩
