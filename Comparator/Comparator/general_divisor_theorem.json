@@ -1,0 +1,19 @@
+{
+    "challenge_module": "Challenge.GeneralDivisionTheorem",
+    "solution_module": "Solution.GeneralDivisionTheorem",
+    "theorem_names": [
+        "GDT.Challenge.gdt_empty",
+        "GDT.Challenge.gdt_periodic",
+        "GDT.Challenge.gdt_minimal_period",
+        "GDT.Challenge.gdt_count_per_period",
+        "GDT.Challenge.gdt_density",
+        "GDT.Challenge.gdt_correction_factor",
+        "GDT.Challenge.general_divisor_theorem"
+    ],
+    "permitted_axioms": [
+        "propext",
+        "Quot.sound",
+        "Classical.choice"
+    ],
+    "enable_nanoda": true
+}
