@@ -6,9 +6,7 @@ Residue Conditioning", Draft v3.3, Theorem 3 (§2.2).
 -/
 module
 
-public import Mathlib.Data.Nat.Totient
-public import Mathlib.Data.Nat.Factorization.Basic
-public import Mathlib.Data.Finset.Basic
+public import ZetaZeros.GDT
 
 /-! # The General Divisor Theorem (Theorem 3)
 
