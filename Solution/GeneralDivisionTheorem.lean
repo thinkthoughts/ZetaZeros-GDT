@@ -515,6 +515,33 @@ lemma exists_accepted {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
 
   exact (gcd_with_N_iff_gcd_with_R hN hm h hcongm).mpr hgcdR
 
+lemma primeFactors_forall_dvd_imp_dvd {n t : ℕ} (hn : 0 < n)
+    (hall : ∀ p ∈ n.primeFactors, p ∣ t) : rad n ∣ t := by
+  unfold rad
+  have hcop : ∀ p ∈ n.primeFactors, ∀ q ∈ n.primeFactors,
+      p ≠ q → Nat.Coprime p q := by
+    intro p hp q hq hne
+    exact (Nat.coprime_primes
+      (Nat.prime_of_mem_primeFactors hp)
+      (Nat.prime_of_mem_primeFactors hq)).mpr hne
+  exact Finset.prod_dvd_of_coprime hcop
+    (fun p hp => hall p hp)
+
+lemma exists_witness_avoiding_dvd {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
+    (h : Admissible N m a) {p : ℕ} (hp : p.Prime) (hpR : p ∣ R N m) :
+    ∃ n1, accepted N m a n1 ∧ ¬ (p ∣ n1) := by
+  obtain ⟨n0, hn0⟩ := exists_accepted hN hm h
+  refine ⟨n0, hn0, ?_⟩
+  intro hpn0
+  have hgcdR : Nat.gcd n0 (R N m) = 1 :=
+    (gcd_with_N_iff_gcd_with_R hN hm h hn0.1).mp hn0.2
+  have hdiv : p ∣ Nat.gcd n0 (R N m) :=
+    Nat.dvd_gcd hpn0 hpR
+  rw [hgcdR] at hdiv
+  exact absurd
+    (Nat.le_of_dvd one_pos hdiv)
+    (not_le.mpr hp.one_lt)
+
 theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {t : ℕ} (ht : 0 < t) (hp : IsPeriod N m a t) :
     Tmin N m ∣ t := by
