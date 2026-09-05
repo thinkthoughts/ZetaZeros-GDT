@@ -327,6 +327,58 @@ lemma periodic_window_card_eq {P : ℕ → Prop} [DecidablePred P] {T : ℕ}
           _ = ((Finset.Ico k (k + T)).filter P).card := hcard_left.symm
           _ = ((Finset.Ico 0 T).filter P).card := ih
 
+/-- `m` and `R N m` share no prime factor. -/
+lemma coprime_m_R {N m : ℕ} (hN : 0 < N) :
+    Nat.Coprime m (R N m) := by
+  by_contra hne
+  have hne' : Nat.gcd m (R N m) ≠ 1 := hne
+  obtain ⟨p, hp, hpdvd⟩ := Nat.exists_prime_and_dvd hne'
+
+  have hpm : p ∣ m :=
+    hpdvd.trans (Nat.gcd_dvd_left _ _)
+
+  have hpR : p ∣ R N m :=
+    hpdvd.trans (Nat.gcd_dvd_right _ _)
+
+  have hpradN : p ∣ rad N := by
+    have hR_dvd : R N m ∣ rad N := by
+      refine ⟨d N m, ?_⟩
+      rw [← d_mul_R_eq_rad hN]
+      ring
+    exact hpR.trans hR_dvd
+
+  have hpN : p ∣ N :=
+    hpradN.trans (rad_dvd_self N)
+
+  have hp_gcd_mN : p ∣ Nat.gcd m N :=
+    Nat.dvd_gcd hpm hpN
+
+  have hgcd_ne : Nat.gcd m N ≠ 0 := by
+    exact (Nat.gcd_pos_of_pos_right m hN).ne'
+
+  have hp_mem : p ∈ (Nat.gcd m N).primeFactors :=
+    Nat.mem_primeFactors.mpr ⟨hp, hp_gcd_mN, hgcd_ne⟩
+
+  have hpd : p ∣ d N m := by
+    unfold d rad
+    apply Nat.dvd_of_mem_primeFactors
+    change p ∈ (∏ q ∈ (Nat.gcd m N).primeFactors, q).primeFactors
+    rw [Nat.primeFactors_prod
+      (fun q hq => Nat.prime_of_mem_primeFactors hq)]
+    exact hp_mem
+
+  have hcontra : p ∣ Nat.gcd (d N m) (R N m) :=
+    Nat.dvd_gcd hpd hpR
+
+  have heq : Nat.gcd (d N m) (R N m) = 1 :=
+    coprime_d_R hN
+
+  rw [heq] at hcontra
+
+  exact absurd
+    (Nat.le_of_dvd one_pos hcontra)
+    (not_le.mpr hp.one_lt)
+
 theorem gdt_count_per_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) (b : ℕ) :
     ((Finset.Ico b (b + Tmin N m)).filter (accepted N m a)).card =
