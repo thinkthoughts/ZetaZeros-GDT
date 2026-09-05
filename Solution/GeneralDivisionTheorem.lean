@@ -518,14 +518,27 @@ lemma exists_accepted {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
 lemma primeFactors_forall_dvd_imp_dvd {n t : ℕ} (hn : 0 < n)
     (hall : ∀ p ∈ n.primeFactors, p ∣ t) : rad n ∣ t := by
   unfold rad
-  have hcop : ∀ p ∈ n.primeFactors, ∀ q ∈ n.primeFactors,
-      p ≠ q → Nat.Coprime p q := by
-    intro p hp q hq hne
-    exact (Nat.coprime_primes
-      (Nat.prime_of_mem_primeFactors hp)
-      (Nat.prime_of_mem_primeFactors hq)).mpr hne
-  exact Finset.prod_dvd_of_coprime hcop
-    (fun p hp => hall p hp)
+  induction n.primeFactors using Finset.induction with
+  | empty =>
+      simp
+  | @insert p s hpnot ih =>
+      rw [Finset.prod_insert hpnot]
+      have hpprime : p.Prime := by
+        apply Nat.prime_of_mem_primeFactors
+        exact Finset.mem_insert_self p s
+      have hsprime : ∀ q ∈ s, q.Prime := by
+        intro q hq
+        apply Nat.prime_of_mem_primeFactors
+        exact Finset.mem_insert_of_mem hq
+      have hpdvd : p ∣ t :=
+        hall p (Finset.mem_insert_self p s)
+      have hsdvd : (∏ q ∈ s, q) ∣ t := by
+        apply ih
+        intro q hq
+        exact hall q (Finset.mem_insert_of_mem hq)
+      have hcop : Nat.Coprime p (∏ q ∈ s, q) := by
+        exact prime_coprime_prod hpprime hsprime hpnot
+      exact Nat.Coprime.mul_dvd_of_dvd_of_dvd hcop hpdvd hsdvd
 
 lemma exists_witness_avoiding_dvd {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {p : ℕ} (hp : p.Prime) (hpR : p ∣ R N m) :
