@@ -583,10 +583,9 @@ lemma squarefree_prime_dvd_split {n p : ℕ} (hsf : Squarefree n) (hp : p.Prime)
   have hsf' : Squarefree (p * k) := by
     rw [← hk]
     exact hsf
-  have hcop_rp_p : Nat.Coprime rp p :=
-  (hp.coprime_iff_not_dvd.mpr (fun hdvd =>
-    absurd (Nat.le_of_dvd (Nat.pos_of_ne_zero hrp_ne_zero) hdvd)
-      (not_le.mpr hrp_lt))).symm
+  have hcop : Nat.Coprime p k :=
+    (Nat.squarefree_mul_iff.mp hsf').1
+  rw [hdiv]
   exact ⟨hcop, hk.symm⟩
 
 lemma R_squarefree {N m : ℕ} (hN : 0 < N) : Squarefree (R N m) := by
@@ -616,9 +615,10 @@ lemma exists_coprime_R_neg_t_mod_p {N m : ℕ} (hN : 0 < N) {p t : ℕ} (hp : p.
     have hdvd : (p:ℤ) ∣ (t:ℤ) := (dvd_neg).mp (Int.modEq_zero_iff_dvd.mp hz)
     exact_mod_cast hdvd
   have hcop_rp_p : Nat.Coprime rp p :=
-    hp.coprime_iff_not_dvd.mpr (fun hdvd =>
-      absurd (Nat.le_of_dvd (Nat.pos_of_ne_zero hrp_ne_zero) hdvd) (not_le.mpr hrp_lt))
-  obtain ⟨k1, hk1p, hk1R'⟩ := Nat.chineseRemainder hcop_pR' rp 1
+    (hp.coprime_iff_not_dvd.mpr (fun hdvd =>
+      absurd
+        (Nat.le_of_dvd (Nat.pos_of_ne_zero hrp_ne_zero) hdvd)
+        (not_le.mpr hrp_lt))).symm
   have hk1p_eq : k1 % p = rp := by
     have h1 : k1 % p = rp % p := hk1p
     rwa [Nat.mod_eq_of_lt hrp_lt] at h1
@@ -680,7 +680,7 @@ lemma canonical_window_card_eq_range_coprime {N m : ℕ} (hN : 0 < N) (hm : 0 < 
         (fun (n : ℕ) => (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧ Nat.gcd n (R N m) = 1)).card =
       ((Finset.range (R N m)).filter
         (fun r => Nat.gcd r (R N m) = 1)).card := by
-  apply Finset.card_bij (fun n _ => n % R N m)m
+ apply Finset.card_bij (fun n _ => n % R N m)
   · rintro n hn
     simp only [Finset.mem_filter, Finset.mem_Ico] at hn
     obtain ⟨⟨-, hlt⟩, hmod, hgcd⟩ := hn
