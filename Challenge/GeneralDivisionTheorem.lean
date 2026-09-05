@@ -40,9 +40,11 @@ def Admissible (N m : ℕ) (a : ℤ) : Prop :=
 def accepted (N m : ℕ) (a : ℤ) (n : ℕ) : Prop :=
   (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧ Nat.gcd n N = 1
 
-local instance acceptedDecidable (N m : ℕ) (a : ℤ) :
-    DecidablePred (accepted N m a) :=
-  fun _ => Classical.propDecidable _
+instance acceptedDecidable (N m : ℕ) (a : ℤ) :
+    DecidablePred (accepted N m a) := by
+  intro n
+  unfold accepted
+  infer_instance
 
 /-- `S(N, L, m, a) = {1 ≤ n ≤ L : n ≡ a (mod m), gcd(n, N) = 1}`. -/
 def S (N L m : ℕ) (a : ℤ) : Finset ℕ :=
