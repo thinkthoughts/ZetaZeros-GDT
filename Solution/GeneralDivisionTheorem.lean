@@ -888,56 +888,47 @@ lemma rad_factorization_eq_one {n : ℕ} (hn : 0 < n) {p : ℕ}
 /-- Exponent-blindness: `φ(n)/n` depends only on `rad n`. -/
 lemma totient_rad_mul (n : ℕ) (hn : 0 < n) :
     n * Nat.totient (rad n) = rad n * Nat.totient n := by
-  have hS_eq : (rad n).factorization.support = n.factorization.support := by
-    rw [Nat.support_factorization, Nat.support_factorization]
+  have hpf : (rad n).primeFactors = n.primeFactors := by
     unfold rad
-    change (∏ q ∈ n.primeFactors, q).primeFactors = n.primeFactors
+    change (∏ p ∈ n.primeFactors, p).primeFactors = n.primeFactors
     rw [Nat.primeFactors_prod
-      (fun q hq => Nat.prime_of_mem_primeFactors hq)]
+      (fun p hp => Nat.prime_of_mem_primeFactors hp)]
 
-  have hphi_n :
-      Nat.totient n =
-        ∏ p ∈ n.factorization.support,
-          p ^ (n.factorization p - 1) * (p - 1) := by
-    exact Nat.totient_eq_prod_factorization hn.ne'
+  have hradEuler := Nat.totient_mul_prod_primeFactors (rad n)
+  rw [hpf] at hradEuler
 
   have hphi_rad :
       Nat.totient (rad n) =
-        ∏ p ∈ n.factorization.support, (p - 1) := by
-    have h0 :=
-      Nat.totient_eq_prod_factorization (rad_pos n).ne'
-    rw [hS_eq] at h0
-    rw [h0]
-    apply Finset.prod_congr rfl
-    intro p hp
-    rw [Nat.support_factorization] at hp
-    rw [rad_factorization_eq_one hn hp]
-    simp
+        ∏ p ∈ n.primeFactors, (p - 1) := by
+    have hrad_eq :
+        ∏ p ∈ n.primeFactors, p = rad n := by
+      rfl
+    rw [hrad_eq] at hradEuler
+    have hcancel :
+        Nat.totient (rad n) * rad n =
+          (∏ p ∈ n.primeFactors, (p - 1)) * rad n := by
+      calc
+        Nat.totient (rad n) * rad n
+            = rad n * ∏ p ∈ n.primeFactors, (p - 1) := hradEuler
+        _ = (∏ p ∈ n.primeFactors, (p - 1)) * rad n := by
+          rw [mul_comm]
+    exact Nat.mul_right_cancel (rad_pos n) hcancel
 
-  have hn_eq :
-      n = ∏ p ∈ n.factorization.support, p ^ n.factorization p := by
-    exact (Nat.factorization_prod_pow_eq_self hn.ne').symm
+  have hnEuler := Nat.totient_mul_prod_primeFactors n
 
   have hrad_eq :
-      rad n = ∏ p ∈ n.factorization.support, p := by
-    unfold rad
-    rw [Nat.support_factorization]
+      ∏ p ∈ n.primeFactors, p = rad n := by
+    rfl
 
-  rw [hphi_rad, hphi_n, hn_eq, hrad_eq]
+  rw [hrad_eq] at hnEuler
 
-  rw [Finset.prod_mul_distrib]
-
-  apply Finset.prod_congr rfl
-  intro p hp
-
-  have hk_pos : 1 ≤ n.factorization p := by
-    rw [Nat.support_factorization] at hp
-    exact Nat.one_le_iff_ne_zero.mpr
-      (Finsupp.mem_support_iff.mp hp)
-
-  rw [← mul_assoc, ← pow_succ']
-  congr 2
-  omega
+  calc
+    n * Nat.totient (rad n)
+        = n * ∏ p ∈ n.primeFactors, (p - 1) := by
+            rw [hphi_rad]
+    _ = Nat.totient n * rad n := hnEuler.symm
+    _ = rad n * Nat.totient n := by
+            rw [mul_comm]
 
 theorem gdt_correction_factor {N m : ℕ} (hN : 0 < N) (hm : 0 < m) :
     Nat.totient (R N m) * N * Nat.totient (d N m) =
