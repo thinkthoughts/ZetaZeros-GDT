@@ -218,23 +218,30 @@ lemma coprime_add_mul_right {k c e : ℕ} :
     rw [heq] at hcontra
     exact absurd (Nat.le_of_dvd one_pos hcontra) (not_le.mpr hp.one_lt)
 
-theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ} (h : Admissible N m a) :
+theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
+    (h : Admissible N m a) :
     IsPeriod N m a (Tmin N m) := by
   intro n
   unfold accepted
-  have hTmin_eq : Tmin N m = R N m * m := by unfold Tmin; ring
+  have hTmin_eq : Tmin N m = R N m * m := by
+    unfold Tmin
+    ring
   have hm_dvd_Tmin : (m : ℤ) ∣ (Tmin N m : ℤ) := by
     have : m ∣ Tmin N m := ⟨R N m, rfl⟩
     exact_mod_cast this
   have hshift_m : ((n : ℤ) + Tmin N m) ≡ (n : ℤ) [ZMOD (m : ℤ)] := by
-    have hz : (Tmin N m : ℤ) ≡ 0 [ZMOD (m : ℤ)] := Int.modEq_zero_iff_dvd.mpr hm_dvd_Tmin
+    have hz : (Tmin N m : ℤ) ≡ 0 [ZMOD (m : ℤ)] :=
+      Int.modEq_zero_iff_dvd.mpr hm_dvd_Tmin
     simpa using Int.ModEq.add_left (n : ℤ) hz
-  have hcast_eq : ((n + Tmin N m : ℕ) : ℤ) = (n : ℤ) + Tmin N m := by push_cast; ring
+  have hcast_eq : ((n + Tmin N m : ℕ) : ℤ) = (n : ℤ) + Tmin N m := by
+    push_cast
+    ring
   constructor
   · rintro ⟨hmod, hgcd⟩
     have hR1 : Nat.gcd (n + Tmin N m) (R N m) = 1 :=
       (gcd_with_N_iff_gcd_with_R hN hm h hmod).mp hgcd
-    have hmod_n : (n : ℤ) ≡ a [ZMOD (m : ℤ)] := hshift_m.symm.trans (hcast_eq ▸ hmod)
+    have hmod_n : (n : ℤ) ≡ a [ZMOD (m : ℤ)] :=
+      hshift_m.symm.trans (hcast_eq ▸ hmod)
     refine ⟨hmod_n, ?_⟩
     have hR0 : Nat.gcd n (R N m) = 1 := by
       rw [hTmin_eq] at hR1
@@ -242,45 +249,15 @@ theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ} (h : Admiss
     exact (gcd_with_N_iff_gcd_with_R hN hm h hmod_n).mpr hR0
   · rintro ⟨hmod, hgcd⟩
     have hmod' : ((n + Tmin N m : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] := by
-      rw [hcast_eq]; exact hshift_m.trans hmod
+      rw [hcast_eq]
+      exact hshift_m.trans hmod
     refine ⟨hmod', ?_⟩
-    have hR0 : Nat.gcd n (R N m) = 1 := (gcd_with_N_iff_gcd_with_R hN hm h hmod).mp hgcd
+    have hR0 : Nat.gcd n (R N m) = 1 :=
+      (gcd_with_N_iff_gcd_with_R hN hm h hmod).mp hgcd
     have hR1 : Nat.gcd (n + Tmin N m) (R N m) = 1 := by
       rw [hTmin_eq]
       exact coprime_add_mul_right.mpr hR0
     exact (gcd_with_N_iff_gcd_with_R hN hm h hmod').mpr hR1
-
-lemma exists_accepted {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
-    (h : Admissible N m a) : ∃ n, accepted N m a n := by
-  set aN : ℕ := (a % (m : ℤ)).toNat with haN_def
-
-  have haN_nonneg : (0 : ℤ) ≤ a % (m : ℤ) :=
-    Int.emod_nonneg a (by exact_mod_cast hm.ne')
-
-  have haN_eq : (aN : ℤ) = a % (m : ℤ) :=
-    Int.toNat_of_nonneg haN_nonneg
-
-  have haN_cong : (aN : ℤ) ≡ a [ZMOD (m : ℤ)] := by
-    show (aN : ℤ) % (m : ℤ) = a % (m : ℤ)
-    rw [haN_eq, Int.emod_emod_of_dvd a (dvd_refl (m : ℤ))]
-
-  obtain ⟨k, hk1, hk2⟩ :=
-    Nat.chineseRemainder (coprime_m_R hN) aN 1
-
-  refine ⟨k, ?_⟩
-  unfold accepted
-
-  have hcongm : ((k : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] := by
-    have hk1' : ((k : ℕ) : ℤ) ≡ (aN : ℤ) [ZMOD (m : ℤ)] := by
-      exact_mod_cast hk1
-    exact hk1'.trans haN_cong
-
-  refine ⟨hcongm, ?_⟩
-
-  have hgcdR : Nat.gcd k (R N m) = 1 := by
-    rw [gcd_mod_eq, hk2]
-
-  exact (gcd_with_N_iff_gcd_with_R hN hm h hcongm).mpr hgcdR
 
 /-- If a predicate on `ℕ` is invariant under adding `T`, then the count of elements
 satisfying it is the same over any window of length `T`, regardless of start point. -/
@@ -499,6 +476,38 @@ lemma gcd_mod_eq (n R : ℕ) :
     Nat.gcd n R = Nat.gcd (n % R) R := by
   rw [Nat.gcd_comm n R, Nat.gcd_rec R n]
 
+lemma exists_accepted {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
+    (h : Admissible N m a) : ∃ n, accepted N m a n := by
+  set aN : ℕ := (a % (m : ℤ)).toNat with haN_def
+
+  have haN_nonneg : (0 : ℤ) ≤ a % (m : ℤ) :=
+    Int.emod_nonneg a (by exact_mod_cast hm.ne')
+
+  have haN_eq : (aN : ℤ) = a % (m : ℤ) :=
+    Int.toNat_of_nonneg haN_nonneg
+
+  have haN_cong : (aN : ℤ) ≡ a [ZMOD (m : ℤ)] := by
+    show (aN : ℤ) % (m : ℤ) = a % (m : ℤ)
+    rw [haN_eq, Int.emod_emod_of_dvd a (dvd_refl (m : ℤ))]
+
+  obtain ⟨k, hk1, hk2⟩ :=
+    Nat.chineseRemainder (coprime_m_R hN) aN 1
+
+  refine ⟨k, ?_⟩
+  unfold accepted
+
+  have hcongm : ((k : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] := by
+    have hk1' : ((k : ℕ) : ℤ) ≡ (aN : ℤ) [ZMOD (m : ℤ)] := by
+      exact_mod_cast hk1
+    exact hk1'.trans haN_cong
+
+  refine ⟨hcongm, ?_⟩
+
+  have hgcdR : Nat.gcd k (R N m) = 1 := by
+    rw [gcd_mod_eq, hk2]
+
+  exact (gcd_with_N_iff_gcd_with_R hN hm h hcongm).mpr hgcdR
+
 theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {t : ℕ} (ht : 0 < t) (hp : IsPeriod N m a t) :
     Tmin N m ∣ t := by
@@ -549,7 +558,9 @@ lemma canonical_window_card_eq_range_coprime {N m : ℕ} (hN : 0 < N) (hm : 0 < 
     obtain ⟨n, hnlt, hnmod, hnmodR⟩ := exists_repr_mod_R (a := a) hN hm hrlt
     refine ⟨n, ?_, hnmodR⟩
     simp only [Finset.mem_filter, Finset.mem_Ico]
-    exact ⟨⟨Nat.zero_le n, hnlt⟩, hnmod, by rw [gcd_mod_eq, hnmodR]; exact hrcop⟩
+    exact ⟨⟨Nat.zero_le n, hnlt⟩, hnmod, by
+      rw [gcd_mod_eq, hnmodR]
+      exact hrcop⟩
 
 lemma count_canonical_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
@@ -573,9 +584,12 @@ theorem gdt_count_per_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
 lemma card_filter_Ico_split {P : ℕ → Prop} [DecidablePred P] {a b c : ℕ}
     (hab : a ≤ b) (hbc : b ≤ c) :
     ((Finset.Ico a c).filter P).card =
-      ((Finset.Ico a b).filter P).card + ((Finset.Ico b c).filter P).card := by
+      ((Finset.Ico a b).filter P).card +
+        ((Finset.Ico b c).filter P).card := by
   have hunion : Finset.Ico a c = Finset.Ico a b ∪ Finset.Ico b c := by
-    ext n; simp only [Finset.mem_Ico, Finset.mem_union]; omega
+    ext n
+    simp only [Finset.mem_Ico, Finset.mem_union]
+    omega
   have hdisj : Disjoint (Finset.Ico a b) (Finset.Ico b c) := by
     rw [Finset.disjoint_left]
     intro n hn1 hn2
@@ -599,7 +613,8 @@ theorem gdt_density {N m q s : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (S N (q * Tmin N m + s) m a).card =
       q * Nat.totient (R N m) + (S N s m a).card := by
   induction q with
-  | zero => simp
+  | zero =>
+      simp
   | succ k ih =>
     have hsplit : (k + 1) * Tmin N m + s =
         (k * Tmin N m + s) + Tmin N m := by
