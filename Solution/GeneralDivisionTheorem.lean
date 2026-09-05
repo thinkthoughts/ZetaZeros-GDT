@@ -499,12 +499,15 @@ lemma canonical_window_card_eq_range_coprime {N m : ℕ} (hN : 0 < N) (hm : 0 < 
 
 lemma count_canonical_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
-    ((Finset.Ico 0 (Tmin N m)).filter (accepted N m a)).card = Nat.totient (R N m) := by
-    rw [Finset.filter_congr (fun n _ => accepted_iff_coprime_R hN hm h n),
+    ((Finset.Ico 0 (Tmin N m)).filter (accepted N m a)).card =
+      Nat.totient (R N m) := by
+  rw [Finset.filter_congr (fun n _ => accepted_iff_coprime_R hN hm h n),
       canonical_window_card_eq_range_coprime hN hm h,
       Nat.totient_eq_card_coprime]
-  exact congrArg Finset.card
-    (Finset.filter_congr (fun r _ => Nat.coprime_comm))
+  apply congrArg Finset.card
+  exact Finset.filter_congr (fun r _ => by
+    change Nat.gcd r (R N m) = 1 ↔ Nat.gcd (R N m) r = 1
+    rw [Nat.gcd_comm])
 
 theorem gdt_count_per_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) (b : ℕ) :
