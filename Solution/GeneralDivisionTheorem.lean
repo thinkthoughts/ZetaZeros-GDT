@@ -137,8 +137,10 @@ lemma coprime_iff_coprime_rad {k n : ℕ} (hn : n ≠ 0) :
       Nat.mem_primeFactors.mpr ⟨hp, hpn, hn⟩
     have hprad_mem : p ∈ (rad n).primeFactors := by
       unfold rad
-      rwa [Nat.primeFactors_prod
+      change p ∈ (∏ q ∈ n.primeFactors, q).primeFactors
+      rw [Nat.primeFactors_prod
         (fun q hq => Nat.prime_of_mem_primeFactors hq)]
+      exact hp_mem
     have hprad : p ∣ rad n :=
       Nat.dvd_of_mem_primeFactors hprad_mem
     have hcontra : p ∣ Nat.gcd k (rad n) :=
