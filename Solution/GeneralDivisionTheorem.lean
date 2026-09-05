@@ -101,6 +101,12 @@ lemma rad_squarefree (n : ℕ) : Squarefree (rad n) := by
   exact prod_primes_squarefree
     (fun p hp => Nat.prime_of_mem_primeFactors hp)
 
+lemma coprime_d_R {N m : ℕ} (hN : 0 < N) :
+    Nat.Coprime (d N m) (R N m) := by
+  have heq : d N m * R N m = rad N := d_mul_R_eq_rad hN
+  have hsf : Squarefree (d N m * R N m) := heq ▸ rad_squarefree N
+  exact (Nat.squarefree_mul_iff.mp hsf).1
+
 theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     IsPeriod N m a (Tmin N m) := by
