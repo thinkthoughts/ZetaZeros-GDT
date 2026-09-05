@@ -446,6 +446,32 @@ lemma exists_repr_mod_R {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ} {r : ℕ
       k % Tmin N m % R N m = r % R N m := hnR
       _ = r := Nat.mod_eq_of_lt hr
 
+/-- Two canonical-window representatives agreeing mod `m` and mod `R` are equal. -/
+lemma repr_unique {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ} {n1 n2 : ℕ}
+    (h1 : n1 < Tmin N m) (h2 : n2 < Tmin N m)
+    (hmod1 : (n1 : ℤ) ≡ a [ZMOD (m : ℤ)])
+    (hmod2 : (n2 : ℤ) ≡ a [ZMOD (m : ℤ)])
+    (hReq : n1 % R N m = n2 % R N m) : n1 = n2 := by
+  have hmodm : n1 ≡ n2 [MOD m] := by
+    have h : (n1 : ℤ) ≡ (n2 : ℤ) [ZMOD (m : ℤ)] :=
+      hmod1.trans hmod2.symm
+    exact_mod_cast h
+  have hmodR : n1 ≡ n2 [MOD R N m] := hReq
+  have hmodTmin : n1 ≡ n2 [MOD Tmin N m] := by
+    have hcomb :=
+      (Nat.modEq_and_modEq_iff_modEq_mul (coprime_m_R hN)).mp
+        ⟨hmodm, hmodR⟩
+    unfold Tmin
+    exact hcomb
+  have heq := hmodTmin
+  unfold Nat.ModEq at heq
+  rwa [Nat.mod_eq_of_lt h1, Nat.mod_eq_of_lt h2] at heq
+
+/-- Coprimality with `R` depends only on the residue modulo `R`. -/
+lemma gcd_mod_eq (n R : ℕ) :
+    Nat.gcd n R = Nat.gcd (n % R) R := by
+  rw [Nat.gcd_comm n R, Nat.gcd_rec R n]
+
 lemma count_canonical_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     ((Finset.Ico 0 (Tmin N m)).filter (accepted N m a)).card =
