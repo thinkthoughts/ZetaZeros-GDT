@@ -149,6 +149,47 @@ lemma coprime_iff_coprime_rad {k n : ℕ} (hn : n ≠ 0) :
     rw [heq] at hcontra
     exact absurd (Nat.le_of_dvd one_pos hcontra) (not_le.mpr hp.one_lt)
 
+/-- If `k ≡ a (mod e)` and `gcd(a.natAbs, e) = 1`, then `k` is coprime to `e`. -/
+lemma coprime_of_modEq_natAbs {k : ℕ} {a : ℤ} {e : ℕ}
+    (hk : (k : ℤ) ≡ a [ZMOD (e : ℤ)]) (ha : Nat.gcd a.natAbs e = 1) :
+    Nat.Coprime k e := by
+  by_contra hne
+  have hne' : Nat.gcd k e ≠ 1 := hne
+  obtain ⟨p, hp, hpdvd⟩ := Nat.exists_prime_and_dvd hne'
+  have hpk : p ∣ k := hpdvd.trans (Nat.gcd_dvd_left _ _)
+  have hpe : p ∣ e := hpdvd.trans (Nat.gcd_dvd_right _ _)
+  have hpe' : (p : ℤ) ∣ (e : ℤ) := Int.natCast_dvd_natCast.mpr hpe
+  have hkp : (k : ℤ) ≡ a [ZMOD (p : ℤ)] := Int.ModEq.of_dvd hpe' hk
+  have hpk' : (p : ℤ) ∣ (k : ℤ) := Int.natCast_dvd_natCast.mpr hpk
+  have hk0 : (k : ℤ) ≡ 0 [ZMOD (p : ℤ)] := Int.modEq_zero_iff_dvd.mpr hpk'
+  have ha0 : a ≡ 0 [ZMOD (p : ℤ)] := hkp.symm.trans hk0
+  have hpa_int : (p : ℤ) ∣ a := Int.modEq_zero_iff_dvd.mp ha0
+  have hpa_nat : p ∣ a.natAbs := by
+    have h := Int.natAbs_dvd_natAbs.mpr hpa_int
+    simpa using h
+  have hcontra : p ∣ Nat.gcd a.natAbs e := Nat.dvd_gcd hpa_nat hpe
+  rw [ha] at hcontra
+  exact absurd (Nat.le_of_dvd one_pos hcontra) (not_le.mpr hp.one_lt)
+
+lemma gcd_with_N_iff_gcd_with_R
+    {N m k : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
+    (ha : Admissible N m a)
+    (hk : (k : ℤ) ≡ a [ZMOD (m : ℤ)]) :
+    Nat.gcd k N = 1 ↔ Nat.gcd k (R N m) = 1 := by
+  have hd_dvd_m : d N m ∣ m :=
+    (rad_dvd_self (Nat.gcd m N)).trans (Nat.gcd_dvd_left m N)
+  have hkd : (k : ℤ) ≡ a [ZMOD (d N m : ℤ)] :=
+    Int.ModEq.of_dvd (Int.natCast_dvd_natCast.mpr hd_dvd_m) hk
+  have hcop_d : Nat.Coprime k (d N m) :=
+    coprime_of_modEq_natAbs hkd ha
+  have hcoN : Nat.Coprime k N ↔ Nat.Coprime k (rad N) :=
+    coprime_iff_coprime_rad hN.ne'
+  rw [← d_mul_R_eq_rad hN] at hcoN
+  rw [Nat.coprime_mul_iff_right] at hcoN
+  show Nat.Coprime k N ↔ Nat.Coprime k (R N m)
+  rw [hcoN]
+  exact ⟨fun h => h.2, fun h => ⟨hcop_d, h⟩⟩
+
 theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     IsPeriod N m a (Tmin N m) := by
