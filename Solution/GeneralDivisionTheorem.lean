@@ -575,6 +575,77 @@ lemma exists_witness_avoiding_dvd {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ
     (Nat.le_of_dvd one_pos hdiv)
     (not_le.mpr hp.one_lt)
 
+lemma squarefree_prime_dvd_split {n p : ℕ} (hsf : Squarefree n) (hp : p.Prime)
+    (hpn : p ∣ n) : Nat.Coprime p (n / p) ∧ p * (n / p) = n := by
+  obtain ⟨k, hk⟩ := hpn
+  have hdiv : n / p = k := by rw [hk, Nat.mul_div_cancel_left k hp.pos]
+  rw [hdiv]
+  refine ⟨?_, hk.symm⟩
+  by_contra hcop
+  have hpk : p ∣ k := by
+    by_contra hnd
+    exact hcop (hp.coprime_iff_not_dvd.mpr hnd)
+  have hppn : p * p ∣ n := by rw [hk]; exact Nat.mul_dvd_mul_left p hpk
+  exact hp.not_unit (hsf p hppn)
+
+lemma R_squarefree {N m : ℕ} (hN : 0 < N) : Squarefree (R N m) := by
+  have hdvd : R N m ∣ rad N := ⟨d N m, by rw [← d_mul_R_eq_rad hN]; ring⟩
+  exact (rad_squarefree N).squarefree_of_dvd hdvd
+
+lemma exists_coprime_R_neg_t_mod_p {N m : ℕ} (hN : 0 < N) {p t : ℕ} (hp : p.Prime)
+    (hpR : p ∣ R N m) (hpt : ¬ p ∣ t) :
+    ∃ r, r < R N m ∧ Nat.Coprime r (R N m) ∧ (r : ℤ) ≡ -(t : ℤ) [ZMOD (p : ℤ)] := by
+  obtain ⟨hcop_pR', hspl⟩ := squarefree_prime_dvd_split (R_squarefree hN) hp hpR
+  set R' := R N m / p with hR'_def
+  set rp : ℕ := ((-(t : ℤ)) % (p : ℤ)).toNat with hrp_def
+  have hrp_nonneg : (0:ℤ) ≤ (-(t:ℤ)) % (p:ℤ) :=
+    Int.emod_nonneg _ (by exact_mod_cast hp.pos.ne')
+  have hrp_eq : (rp : ℤ) = (-(t:ℤ)) % (p:ℤ) := Int.toNat_of_nonneg hrp_nonneg
+  have hrp_cong : (rp : ℤ) ≡ -(t : ℤ) [ZMOD (p : ℤ)] := by
+    show (rp:ℤ) % (p:ℤ) = (-(t:ℤ)) % (p:ℤ)
+    rw [hrp_eq, Int.emod_emod_of_dvd _ (dvd_refl (p:ℤ))]
+  have hrp_lt : rp < p := by
+    have hlt := Int.emod_lt_of_pos (-(t:ℤ)) (show (0:ℤ) < (p:ℤ) by exact_mod_cast hp.pos)
+    rw [← hrp_eq] at hlt; exact_mod_cast hlt
+  have hrp_ne_zero : rp ≠ 0 := by
+    intro h0
+    apply hpt
+    have hz : (-(t:ℤ)) ≡ 0 [ZMOD (p:ℤ)] :=
+      (show ((0:ℕ):ℤ) ≡ -(t:ℤ) [ZMOD (p:ℤ)] by rw [← h0]; exact hrp_cong).symm
+    have hdvd : (p:ℤ) ∣ (t:ℤ) := (dvd_neg).mp (Int.modEq_zero_iff_dvd.mp hz)
+    exact_mod_cast hdvd
+  have hcop_rp_p : Nat.Coprime rp p :=
+    hp.coprime_iff_not_dvd.mpr (fun hdvd =>
+      absurd (Nat.le_of_dvd (Nat.pos_of_ne_zero hrp_ne_zero) hdvd) (not_le.mpr hrp_lt))
+  obtain ⟨k1, hk1p, hk1R'⟩ := Nat.chineseRemainder hcop_pR' rp 1
+  have hk1p_eq : k1 % p = rp := by
+    have h1 : k1 % p = rp % p := hk1p
+    rwa [Nat.mod_eq_of_lt hrp_lt] at h1
+  have hk1_cop_p : Nat.Coprime k1 p := by
+    show Nat.gcd k1 p = 1
+    rw [gcd_mod_eq k1 p, hk1p_eq]; exact hcop_rp_p
+  have hk1_cop_R' : Nat.Coprime k1 R' := by
+    show Nat.gcd k1 R' = 1
+    have heq1 : k1 % R' = 1 % R' := hk1R'
+    have hg1 : Nat.gcd (1 % R') R' = 1 := by
+      rw [← gcd_mod_eq 1 R']; exact Nat.coprime_one_left R'
+    rw [gcd_mod_eq k1 R', heq1]; exact hg1
+  have hk1_cop_R : Nat.Coprime k1 (R N m) := by
+    rw [← hspl, Nat.coprime_mul_iff_right]; exact ⟨hk1_cop_p, hk1_cop_R'⟩
+  set r : ℕ := k1 % (R N m) with hr_def
+  refine ⟨r, Nat.mod_lt k1 (R_pos hN), ?_, ?_⟩
+  · show Nat.gcd r (R N m) = 1
+    rw [← gcd_mod_eq k1 (R N m)]; exact hk1_cop_R
+  · have hr_modR : r ≡ k1 [MOD R N m] := Nat.mod_modEq k1 (R N m)
+    have hr_modp : r ≡ k1 [MOD p] := Nat.ModEq.of_dvd hpR hr_modR
+    have hr_eq_rp : r % p = rp := by
+      have h1 : r % p = k1 % p := hr_modp
+      rwa [hk1p_eq] at h1
+    have hr_modeq_rp : r ≡ rp [MOD p] := by
+      unfold Nat.ModEq; rw [hr_eq_rp, Nat.mod_eq_of_lt hrp_lt]
+    have hr_int : (r:ℤ) ≡ (rp:ℤ) [ZMOD (p:ℤ)] := by exact_mod_cast hr_modeq_rp
+    exact hr_int.trans hrp_cong
+
 theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {t : ℕ} (ht : 0 < t) (hp : IsPeriod N m a t) :
     Tmin N m ∣ t := by
@@ -608,7 +679,7 @@ lemma canonical_window_card_eq_range_coprime {N m : ℕ} (hN : 0 < N) (hm : 0 < 
         (fun (n : ℕ) => (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧ Nat.gcd n (R N m) = 1)).card =
       ((Finset.range (R N m)).filter
         (fun r => Nat.gcd r (R N m) = 1)).card := by
-  apply Finset.card_bij (fun n _ => n % R N m)
+  apply Finset.card_bij (fun n _ => n % R N m)m
   · rintro n hn
     simp only [Finset.mem_filter, Finset.mem_Ico] at hn
     obtain ⟨⟨-, hlt⟩, hmod, hgcd⟩ := hn
