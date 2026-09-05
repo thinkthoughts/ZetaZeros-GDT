@@ -501,15 +501,12 @@ lemma count_canonical_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     ((Finset.Ico 0 (Tmin N m)).filter (accepted N m a)).card = Nat.totient (R N m) := by
   rw [Finset.filter_congr (fun n _ => accepted_iff_coprime_R hN hm h n),
-      canonical_window_card_eq_range_coprime hN hm h]
-  unfold Nat.totient
-  exact congrArg Finset.card (Finset.filter_congr (fun r _ => Nat.coprime_comm))
-
-theorem gdt_count_per_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
-    (h : Admissible N m a) (b : ℕ) :
-    ((Finset.Ico b (b + Tmin N m)).filter (accepted N m a)).card =
-      Nat.totient (R N m) := by
-  sorry
+      canonical_window_card_eq_range_coprime hN hm h,
+      Nat.totient_eq_card_coprime]
+  apply Finset.filter_congr
+  intro r _
+  show Nat.gcd r (R N m) = 1 ↔ Nat.gcd (R N m) r = 1
+  rw [Nat.gcd_comm]
 
 theorem gdt_density {N m q s : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) (hs : s < Tmin N m) :
