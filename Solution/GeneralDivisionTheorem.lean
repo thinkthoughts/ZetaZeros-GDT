@@ -1,6 +1,6 @@
 module
 
-public import Challenge.GeneralDivisionTheorem
+public import ZetaZeros.GDT
 
 @[expose] public section
 
