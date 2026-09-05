@@ -505,6 +505,13 @@ lemma exists_accepted {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
 
   have hgcdR : Nat.gcd k (R N m) = 1 := by
     rw [gcd_mod_eq, hk2]
+    by_cases hR1 : R N m = 1
+    · simp [hR1]
+    · have hRgt : 1 < R N m := by
+        have hRpos : 0 < R N m := R_pos hN
+        omega
+      rw [Nat.mod_eq_of_lt hRgt]
+      simp
 
   exact (gcd_with_N_iff_gcd_with_R hN hm h hcongm).mpr hgcdR
 
