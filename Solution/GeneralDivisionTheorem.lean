@@ -51,6 +51,25 @@ lemma d_mul_R_eq_rad {N m : ℕ} (hN : 0 < N) : d N m * R N m = rad N := by
   unfold R
   exact Nat.mul_div_cancel' (d_dvd_rad hN)
 
+lemma rad_squarefree (n : ℕ) : Squarefree (rad n) := by
+  unfold rad
+  rw [Nat.squarefree_iff_factorization_le_one
+    (Finset.prod_ne_zero_iff.mpr (fun p hp => (Nat.prime_of_mem_primeFactors hp).pos.ne'))]
+  intro p
+  rw [Nat.factorization_prod
+    (fun p hp => (Nat.prime_of_mem_primeFactors hp).pos.ne')]
+  by_cases hp : p ∈ n.primeFactors
+  · have : ∀ q ∈ n.primeFactors, (id q).factorization p = if q = p then 1 else 0 := by
+      intro q hq
+      exact (Nat.prime_of_mem_primeFactors hq).factorization_self ▸ by
+        simp [Nat.Prime.factorization, Finsupp.single_apply]
+    simp [Finset.sum_congr rfl this, Finset.sum_ite_eq', hp]
+  · have : ∀ q ∈ n.primeFactors, (id q).factorization p = 0 := by
+      intro q hq
+      have hqp : q ≠ p := fun h => hp (h ▸ hq)
+      simp [Nat.Prime.factorization, Finsupp.single_apply, hqp]
+    simp [Finset.sum_congr rfl this]
+
 theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     IsPeriod N m a (Tmin N m) := by
