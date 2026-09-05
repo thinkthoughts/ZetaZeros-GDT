@@ -531,9 +531,14 @@ lemma card_filter_Ico_split {P : ℕ → Prop} [DecidablePred P] {a b c : ℕ}
       Finset.card_union_of_disjoint
         (hdisj.mono (Finset.filter_subset _ _) (Finset.filter_subset _ _))]
 
-lemma S_eq_Ico (N L m : ℕ) (a : ℤ) :
-    S N L m a = (Finset.Ico 1 (L + 1)).filter (accepted N m a) := by
-  unfold S; rw [Nat.Ico_succ_right]
+lemma S_eq_filter_Ico (N L m : ℕ) (a : ℤ) :
+    S N L m a =
+      (Finset.Ico 1 (L + 1)).filter (accepted N m a) := by
+  unfold S
+  apply Finset.ext
+  intro n
+  simp only [Finset.mem_filter, Finset.mem_Icc, Finset.mem_Ico]
+  omega
 
 theorem gdt_density {N m q s : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) (hs : s < Tmin N m) :
