@@ -648,6 +648,31 @@ lemma exists_coprime_R_neg_t_mod_p {N m : ℕ} (hN : 0 < N) {p t : ℕ} (hp : p.
     have hr_int : (r:ℤ) ≡ (rp:ℤ) [ZMOD (p:ℤ)] := by exact_mod_cast hr_modeq_rp
     exact hr_int.trans hrp_cong
 
+lemma exists_witness_neg_t_mod_p {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
+    (h : Admissible N m a) {p t : ℕ} (hp : p.Prime) (hpR : p ∣ R N m) (hpt : ¬ p ∣ t) :
+    ∃ n1, accepted N m a n1 ∧ (n1 : ℤ) ≡ -(t : ℤ) [ZMOD (p : ℤ)] := by
+  obtain ⟨r, hrlt, hrcop, hrcong⟩ := exists_coprime_R_neg_t_mod_p hN hp hpR hpt
+  set aN : ℕ := (a % (m : ℤ)).toNat with haN_def
+  have haN_nonneg : (0 : ℤ) ≤ a % (m : ℤ) := Int.emod_nonneg a (by exact_mod_cast hm.ne')
+  have haN_eq : (aN : ℤ) = a % (m : ℤ) := Int.toNat_of_nonneg haN_nonneg
+  have haN_cong : (aN : ℤ) ≡ a [ZMOD (m : ℤ)] := by
+    show (aN : ℤ) % (m : ℤ) = a % (m : ℤ)
+    rw [haN_eq, Int.emod_emod_of_dvd a (dvd_refl (m : ℤ))]
+  obtain ⟨k, hk1, hk2⟩ := Nat.chineseRemainder (coprime_m_R hN) aN r
+  refine ⟨k, ⟨?_, ?_⟩, ?_⟩
+  · have : ((k : ℕ) : ℤ) ≡ (aN : ℤ) [ZMOD (m : ℤ)] := by exact_mod_cast hk1
+    exact this.trans haN_cong
+  · have hgcdR : Nat.gcd k (R N m) = 1 := by
+      rw [gcd_mod_eq, hk2]; exact hrcop
+    have hcongm : ((k : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] := by
+      have : ((k : ℕ) : ℤ) ≡ (aN : ℤ) [ZMOD (m : ℤ)] := by exact_mod_cast hk1
+      exact this.trans haN_cong
+    exact (gcd_with_N_iff_gcd_with_R hN hm h hcongm).mpr hgcdR
+  · have hkr : k ≡ r [MOD R N m] := hk2
+    have hkr_p : k ≡ r [MOD p] := Nat.ModEq.of_dvd hpR hkr
+    have hkr_int : (k : ℤ) ≡ (r : ℤ) [ZMOD (p : ℤ)] := by exact_mod_cast hkr_p
+    exact hkr_int.trans hrcong
+
 theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {t : ℕ} (ht : 0 < t) (hp : IsPeriod N m a t) :
     Tmin N m ∣ t := by
