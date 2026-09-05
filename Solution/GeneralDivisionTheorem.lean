@@ -475,8 +475,9 @@ lemma gcd_mod_eq (n R : ℕ) :
 lemma canonical_window_card_eq_range_coprime {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     ((Finset.Ico 0 (Tmin N m)).filter
-        (fun (n : ℕ) => (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧ Nat.gcd n (R N m) = 1)
-      ((Finset.range (R N m)).filter (fun r => Nat.gcd r (R N m) = 1)).card := by
+        (fun (n : ℕ) => (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧ Nat.gcd n (R N m) = 1)).card =
+      ((Finset.range (R N m)).filter
+        (fun r => Nat.gcd r (R N m) = 1)).card := by
   apply Finset.card_bij (fun n _ => n % R N m)
   · rintro n hn
     simp only [Finset.mem_filter, Finset.mem_Ico] at hn
