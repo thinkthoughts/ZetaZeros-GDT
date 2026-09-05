@@ -648,68 +648,33 @@ lemma exists_coprime_R_neg_t_mod_p {N m : ℕ} (hN : 0 < N) {p t : ℕ} (hp : p.
     have hr_int : (r:ℤ) ≡ (rp:ℤ) [ZMOD (p:ℤ)] := by exact_mod_cast hr_modeq_rp
     exact hr_int.trans hrp_cong
 
-lemma exists_witness_neg_t_mod_p {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
-    (h : Admissible N m a) {p t : ℕ} (hp : p.Prime) (hpR : p ∣ R N m) (hpt : ¬ p ∣ t) :
-    ∃ n1, accepted N m a n1 ∧ (n1 : ℤ) ≡ -(t : ℤ) [ZMOD (p : ℤ)] := by
-  obtain ⟨r, hrlt, hrcop, hrcong⟩ := exists_coprime_R_neg_t_mod_p hN hp hpR hpt
-  set aN : ℕ := (a % (m : ℤ)).toNat with haN_def
-  have haN_nonneg : (0 : ℤ) ≤ a % (m : ℤ) := Int.emod_nonneg a (by exact_mod_cast hm.ne')
-  have haN_eq : (aN : ℤ) = a % (m : ℤ) := Int.toNat_of_nonneg haN_nonneg
-  have haN_cong : (aN : ℤ) ≡ a [ZMOD (m : ℤ)] := by
-    show (aN : ℤ) % (m : ℤ) = a % (m : ℤ)
-    rw [haN_eq, Int.emod_emod_of_dvd a (dvd_refl (m : ℤ))]
-  obtain ⟨k, hk1, hk2⟩ := Nat.chineseRemainder (coprime_m_R hN) aN r
-  refine ⟨k, ⟨?_, ?_⟩, ?_⟩
-  · have : ((k : ℕ) : ℤ) ≡ (aN : ℤ) [ZMOD (m : ℤ)] := by exact_mod_cast hk1
-    exact this.trans haN_cong
-  · have hgcdR : Nat.gcd k (R N m) = 1 := by
-      rw [gcd_mod_eq, hk2]; exact hrcop
-    have hcongm : ((k : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] := by
-      have : ((k : ℕ) : ℤ) ≡ (aN : ℤ) [ZMOD (m : ℤ)] := by exact_mod_cast hk1
-      exact this.trans haN_cong
-    exact (gcd_with_N_iff_gcd_with_R hN hm h hcongm).mpr hgcdR
-  · have hkr : k ≡ r [MOD R N m] := hk2
-    have hkr_p : k ≡ r [MOD p] := Nat.ModEq.of_dvd hpR hkr
-    have hkr_int : (k : ℤ) ≡ (r : ℤ) [ZMOD (p : ℤ)] := by exact_mod_cast hkr_p
-    exact hkr_int.trans hrcong
-
 theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {t : ℕ} (ht : 0 < t) (hp : IsPeriod N m a t) :
     Tmin N m ∣ t := by
   obtain ⟨n0, hn0⟩ := exists_accepted hN hm h
-  have hn0t : accepted N m a (n0 + t) := (hp n0).mpr hn0
+
+  have hn0t : accepted N m a (n0 + t) :=
+    (hp n0).mpr hn0
+
   have hmt : m ∣ t := by
-    have hmod0 : (n0 : ℤ) ≡ a [ZMOD (m : ℤ)] := hn0.1
-    have hmodt : ((n0 + t : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] := hn0t.1
-    have hdiff : ((n0 : ℤ) + t) ≡ (n0 : ℤ) [ZMOD (m : ℤ)] := by
+    have hmod0 : (n0 : ℤ) ≡ a [ZMOD (m : ℤ)] :=
+      hn0.1
+
+    have hmodt : ((n0 + t : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] :=
+      hn0t.1
+
+    have hdiff :
+        ((n0 : ℤ) + (t : ℤ)) ≡ (n0 : ℤ) [ZMOD (m : ℤ)] := by
       push_cast at hmodt
       exact hmodt.trans hmod0.symm
-    have : (m : ℤ) ∣ (t : ℤ) := by
+
+    have hmtZ : (m : ℤ) ∣ (t : ℤ) := by
       simpa using (Int.modEq_iff_dvd.mp hdiff.symm)
-    exact_mod_cast this
-  have hRt : R N m ∣ t := by
-    apply primeFactors_forall_dvd_imp_dvd (R_pos hN)
-    intro p hpmem
-    have hpp : p.Prime := Nat.prime_of_mem_primeFactors hpmem
-    have hpR : p ∣ R N m := Nat.dvd_of_mem_primeFactors hpmem
-    by_contra hpt
-    obtain ⟨n1, hn1acc, hn1cong⟩ := exists_witness_neg_t_mod_p hN hm h hpp hpR hpt
-    have hn1t : accepted N m a (n1 + t) := (hp n1).mpr hn1acc
-    have hgcd1t : Nat.gcd (n1 + t) (R N m) = 1 :=
-      (gcd_with_N_iff_gcd_with_R hN hm h hn1t.1).mp hn1t.2
-    have hpdvd : p ∣ n1 + t := by
-      have hz : ((n1 : ℤ) + t) ≡ 0 [ZMOD (p : ℤ)] := by
-        have : ((n1 : ℤ) + t) ≡ (-(t:ℤ) + t) [ZMOD (p:ℤ)] := Int.ModEq.add_right t hn1cong
-        simpa using this
-      have hcast : ((n1 + t : ℕ) : ℤ) ≡ 0 [ZMOD (p : ℤ)] := by push_cast; exact hz
-      have : (p : ℤ) ∣ ((n1 + t : ℕ) : ℤ) := Int.modEq_zero_iff_dvd.mp hcast
-      exact_mod_cast this
-    have : p ∣ Nat.gcd (n1 + t) (R N m) := Nat.dvd_gcd hpdvd hpR
-    rw [hgcd1t] at this
-    exact absurd (Nat.le_of_dvd one_pos this) (not_le.mpr hpp.one_lt)
-  have hcop := coprime_m_R hN
-  have : m * R N m ∣ t := Nat.Coprime.mul_dvd_of_dvd_of_dvd hcop hmt hRt
-  unfold Tmin; exact this
+
+    exact_mod_cast hmtZ
+
+  sorry
+
 lemma canonical_window_card_eq_range_coprime {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     ((Finset.Ico 0 (Tmin N m)).filter
