@@ -664,21 +664,17 @@ theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   have hmt : m ∣ t := by
     have hmod0 : (n0 : ℤ) ≡ a [ZMOD (m : ℤ)] :=
       hn0.1
-
     have hmodt : ((n0 + t : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] :=
       hn0t.1
-
     have hdiff :
         ((n0 : ℤ) + (t : ℤ)) ≡ (n0 : ℤ) [ZMOD (m : ℤ)] := by
       push_cast at hmodt
       exact hmodt.trans hmod0.symm
-
     have hmtZ : (m : ℤ) ∣ (t : ℤ) := by
       simpa using (Int.modEq_iff_dvd.mp hdiff.symm)
-
     exact_mod_cast hmtZ
 
-      have hradRt : rad (R N m) ∣ t := by
+  have hradRt : rad (R N m) ∣ t := by
     apply primeFactors_forall_dvd_imp_dvd (R_pos hN)
     intro p hpmem
 
@@ -697,8 +693,12 @@ theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
       exists_repr_mod_R (a := a) hN hm hrlt
 
     have hgcdR1 : Nat.gcd n1 (R N m) = 1 := by
-      rw [gcd_mod_eq, hn1modR]
-      exact hrcop
+      calc
+        Nat.gcd n1 (R N m)
+            = Nat.gcd (n1 % R N m) (R N m) :=
+                gcd_mod_eq n1 (R N m)
+        _ = Nat.gcd r (R N m) := by rw [hn1modR]
+        _ = 1 := hrcop
 
     have hn1acc : accepted N m a n1 := by
       refine ⟨hn1mod, ?_⟩
@@ -752,9 +752,6 @@ theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   have hmR : m * R N m ∣ t :=
     Nat.Coprime.mul_dvd_of_dvd_of_dvd
       (coprime_m_R hN) hmt hRt
-
-  unfold Tmin
-  exact hmR
 
   unfold Tmin
   exact hmR
