@@ -516,11 +516,48 @@ theorem gdt_count_per_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   rw [periodic_window_card_eq (gdt_periodic hN hm h) b]
   exact count_canonical_period hN hm h
 
+lemma card_filter_Ico_split {P : ℕ → Prop} [DecidablePred P] {a b c : ℕ}
+    (hab : a ≤ b) (hbc : b ≤ c) :
+    ((Finset.Ico a c).filter P).card =
+      ((Finset.Ico a b).filter P).card + ((Finset.Ico b c).filter P).card := by
+  have hunion : Finset.Ico a c = Finset.Ico a b ∪ Finset.Ico b c := by
+    ext n; simp only [Finset.mem_Ico, Finset.mem_union]; omega
+  have hdisj : Disjoint (Finset.Ico a b) (Finset.Ico b c) := by
+    rw [Finset.disjoint_left]
+    intro n hn1 hn2
+    simp only [Finset.mem_Ico] at hn1 hn2
+    omega
+  rw [hunion, Finset.filter_union,
+      Finset.card_union_of_disjoint
+        (hdisj.mono (Finset.filter_subset _ _) (Finset.filter_subset _ _))]
+
+lemma S_eq_Ico (N L m : ℕ) (a : ℤ) :
+    S N L m a = (Finset.Ico 1 (L + 1)).filter (accepted N m a) := by
+  unfold S; rw [Nat.Ico_succ_right]
+
 theorem gdt_density {N m q s : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) (hs : s < Tmin N m) :
     (S N (q * Tmin N m + s) m a).card =
       q * Nat.totient (R N m) + (S N s m a).card := by
-  sorry
+  induction q with
+  | zero => simp
+  | succ k ih =>
+    have hsplit : (k + 1) * Tmin N m + s = (k * Tmin N m + s) + Tmin N m := by ring
+    rw [hsplit, S_eq_Ico]
+    rw [card_filter_Ico_split (a := 1) (b := k * Tmin N m + s + 1)
+        (c := k * Tmin N m + s + Tmin N m + 1) (by omega) (by omega)]
+    have hfirst : ((Finset.Ico 1 (k * Tmin N m + s + 1)).filter (accepted N m a)).card
+        = k * Nat.totient (R N m) + (S N s m a).card := by
+      rw [← S_eq_Ico]; exact ih
+    have hsecond : ((Finset.Ico (k * Tmin N m + s + 1)
+        (k * Tmin N m + s + Tmin N m + 1)).filter (accepted N m a)).card
+        = Nat.totient (R N m) := by
+      have heq : k * Tmin N m + s + Tmin N m + 1
+          = (k * Tmin N m + s + 1) + Tmin N m := by ring
+      rw [heq]
+      exact gdt_count_per_period hN hm h (k * Tmin N m + s + 1)
+    rw [hfirst, hsecond]
+    ring
 
 theorem gdt_correction_factor {N m : ℕ} (hN : 0 < N) (hm : 0 < m) :
     Nat.totient (R N m) * N * Nat.totient (d N m) =
