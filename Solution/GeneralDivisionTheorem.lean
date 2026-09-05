@@ -38,6 +38,19 @@ theorem gdt_empty {N m L : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   have hp_dvd_one : p ∣ 1 := hcop ▸ Nat.dvd_gcd hpn' hpN
   exact absurd (Nat.le_of_dvd one_pos hp_dvd_one) (not_le.mpr hp.one_lt)
 
+/-- `d N m` divides `rad N`. -/
+lemma d_dvd_rad {N m : ℕ} (hN : 0 < N) : d N m ∣ rad N := by
+  unfold d rad
+  have hdvd : Nat.gcd m N ∣ N := Nat.gcd_dvd_right m N
+  have hsub : (Nat.gcd m N).primeFactors ⊆ N.primeFactors :=
+    Nat.primeFactors_mono hdvd hN.ne'
+  exact Finset.prod_dvd_prod_of_subset _ _ id hsub
+
+/-- `d N m * R N m = rad N`. -/
+lemma d_mul_R_eq_rad {N m : ℕ} (hN : 0 < N) : d N m * R N m = rad N := by
+  unfold R
+  exact Nat.mul_div_cancel' (d_dvd_rad hN)
+
 theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     IsPeriod N m a (Tmin N m) := by
