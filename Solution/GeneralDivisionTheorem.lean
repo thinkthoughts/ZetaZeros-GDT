@@ -52,25 +52,49 @@ lemma d_mul_R_eq_rad {N m : ℕ} (hN : 0 < N) : d N m * R N m = rad N := by
   unfold R
   exact Nat.mul_div_cancel' (d_dvd_rad hN)
 
+lemma prime_coprime_prod {a : ℕ} (ha : a.Prime) {s : Finset ℕ}
+    (hs : ∀ p ∈ s, p.Prime) (ha_not : a ∉ s) :
+    Nat.Coprime a (∏ p ∈ s, p) := by
+  revert hs ha_not
+  induction s using Finset.induction with
+  | empty =>
+      intro hs ha_not
+      simp
+  | @insert b t hb ih =>
+      intro hs ha_not
+      rw [Finset.prod_insert hb]
+      have hbprime : b.Prime :=
+        hs b (Finset.mem_insert_self b t)
+      have habne : a ≠ b := by
+        intro hab
+        subst b
+        exact ha_not (Finset.mem_insert_self a t)
+      have hab : Nat.Coprime a b :=
+        (Nat.coprime_primes ha hbprime).mpr habne
+      have hs_t : ∀ p ∈ t, p.Prime := by
+        intro p hp
+        exact hs p (Finset.mem_insert_of_mem hp)
+      have ha_not_t : a ∉ t := by
+        intro hat
+        exact ha_not (Finset.mem_insert_of_mem hat)
+      exact hab.mul_right (ih hs_t ha_not_t)
+
 lemma prod_primes_squarefree {s : Finset ℕ} (hs : ∀ p ∈ s, p.Prime) :
     Squarefree (∏ p ∈ s, p) := by
   induction s using Finset.induction with
-  | empty => simpa using Nat.squarefree_one
+  | empty =>
+      simpa using Nat.squarefree_one
   | insert a s ha ih =>
-    rw [Finset.prod_insert ha]
-    have hpa : a.Prime := hs a (Finset.mem_insert_self a s)
-    have hs' : ∀ p ∈ s, p.Prime := fun p hp => hs p (Finset.mem_insert_of_mem hp)
-    have hcop : Nat.Coprime a (∏ p ∈ s, p) := by
-      induction s using Finset.induction with
-      | empty => simp
-      | insert b t hb iht =>
-        rw [Finset.prod_insert hb]
-        have hab : Nat.Coprime a b :=
-          (Nat.coprime_primes hpa (hs (Finset.mem_insert_self b t))).mpr
-            (fun h => ha (h ▸ Finset.mem_insert_self b t))
-        exact hab.mul_right (iht (fun p hp => hs p (Finset.mem_insert_of_mem hp))
-          (fun h => ha (Finset.mem_insert_of_mem h)))
-    exact (Nat.squarefree_mul_iff hcop).mpr ⟨hpa.squarefree, ih hs'⟩
+      rw [Finset.prod_insert ha]
+      have hpa : a.Prime :=
+        hs a (Finset.mem_insert_self a s)
+      have hs' : ∀ p ∈ s, p.Prime := by
+        intro p hp
+        exact hs p (Finset.mem_insert_of_mem hp)
+      have hcop : Nat.Coprime a (∏ p ∈ s, p) :=
+        prime_coprime_prod hpa hs' ha
+      exact Nat.squarefree_mul_iff.mpr
+        ⟨hcop, hpa.squarefree, ih hs'⟩
 
 lemma rad_squarefree (n : ℕ) : Squarefree (rad n) := by
   unfold rad
