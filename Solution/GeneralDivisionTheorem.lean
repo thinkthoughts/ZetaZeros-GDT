@@ -1,6 +1,7 @@
 module
 
 public import ZetaZeros.GDT
+public import Mathlib.Data.Nat.Squarefree
 
 @[expose] public section
 
