@@ -25,7 +25,7 @@ theorem gdt_empty {N m L : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   have hpm : p ∣ m := hp_gcd.trans (Nat.gcd_dvd_left _ _)
   have hpN : p ∣ N := hp_gcd.trans (Nat.gcd_dvd_right _ _)
   have hpa' : (p : ℤ) ∣ a := Int.dvd_natAbs.mp (Int.natCast_dvd_natCast.mpr hpa)
-  apply Finset.eq_empty_iff_forall_not_mem.mpr
+  apply Finset.eq_empty_iff_forall_notMem.mpr
   intro n hn
   simp only [S, Finset.mem_filter, accepted] at hn
   obtain ⟨-, hmod, hcop⟩ := hn
