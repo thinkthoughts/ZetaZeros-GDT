@@ -107,6 +107,46 @@ lemma coprime_d_R {N m : ℕ} (hN : 0 < N) :
   have hsf : Squarefree (d N m * R N m) := heq ▸ rad_squarefree N
   exact (Nat.squarefree_mul_iff.mp hsf).1
 
+/-- `rad n` divides `n`. -/
+lemma rad_dvd_self (n : ℕ) : rad n ∣ n := by
+  unfold rad
+  exact Nat.prod_primeFactors_dvd n
+
+/-- `k` is coprime to `n` iff `k` is coprime to `rad n`. -/
+lemma coprime_iff_coprime_rad {k n : ℕ} (hn : n ≠ 0) :
+    Nat.Coprime k n ↔ Nat.Coprime k (rad n) := by
+  constructor
+  · intro h
+    by_contra hne
+    have hne' : Nat.gcd k (rad n) ≠ 1 := hne
+    obtain ⟨p, hp, hpdvd⟩ := Nat.exists_prime_and_dvd hne'
+    have hpk : p ∣ k := hpdvd.trans (Nat.gcd_dvd_left _ _)
+    have hprad : p ∣ rad n := hpdvd.trans (Nat.gcd_dvd_right _ _)
+    have hpn : p ∣ n := hprad.trans (rad_dvd_self n)
+    have hcontra : p ∣ Nat.gcd k n := Nat.dvd_gcd hpk hpn
+    have heq : Nat.gcd k n = 1 := h
+    rw [heq] at hcontra
+    exact absurd (Nat.le_of_dvd one_pos hcontra) (not_le.mpr hp.one_lt)
+  · intro h
+    by_contra hne
+    have hne' : Nat.gcd k n ≠ 1 := hne
+    obtain ⟨p, hp, hpdvd⟩ := Nat.exists_prime_and_dvd hne'
+    have hpk : p ∣ k := hpdvd.trans (Nat.gcd_dvd_left _ _)
+    have hpn : p ∣ n := hpdvd.trans (Nat.gcd_dvd_right _ _)
+    have hp_mem : p ∈ n.primeFactors :=
+      Nat.mem_primeFactors.mpr ⟨hp, hpn, hn⟩
+    have hprad_mem : p ∈ (rad n).primeFactors := by
+      unfold rad
+      rwa [Nat.primeFactors_prod
+        (fun q hq => Nat.prime_of_mem_primeFactors hq)]
+    have hprad : p ∣ rad n :=
+      Nat.dvd_of_mem_primeFactors hprad_mem
+    have hcontra : p ∣ Nat.gcd k (rad n) :=
+      Nat.dvd_gcd hpk hprad
+    have heq : Nat.gcd k (rad n) = 1 := h
+    rw [heq] at hcontra
+    exact absurd (Nat.le_of_dvd one_pos hcontra) (not_le.mpr hp.one_lt)
+
 theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     IsPeriod N m a (Tmin N m) := by
