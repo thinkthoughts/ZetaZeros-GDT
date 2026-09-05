@@ -255,6 +255,48 @@ theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     Tmin N m ∣ t := by
   sorry
 
+lemma periodic_window_card_eq {P : ℕ → Prop} [DecidablePred P] {T : ℕ}
+    (hP : ∀ n, P (n + T) ↔ P n) (b : ℕ) :
+    ((Finset.Ico b (b + T)).filter P).card = ((Finset.Ico 0 T).filter P).card := by
+  induction b with
+  | zero => simp
+  | succ k ih =>
+    rcases Nat.eq_zero_or_pos T with hT0 | hT
+    · simp [hT0]
+    · have hk_notmem : k ∉ Finset.Ico (k + 1) (k + T) := by
+        simp only [Finset.mem_Ico]; omega
+      have hkT_notmem : (k + T) ∉ Finset.Ico (k + 1) (k + T) := by
+        simp only [Finset.mem_Ico]; omega
+      have hsplit_left : Finset.Ico k (k + T) = insert k (Finset.Ico (k + 1) (k + T)) := by
+        ext n; simp only [Finset.mem_Ico, Finset.mem_insert]; omega
+      have hsplit_right : Finset.Ico (k + 1) (k + 1 + T) =
+          insert (k + T) (Finset.Ico (k + 1) (k + T)) := by
+        ext n; simp only [Finset.mem_Ico, Finset.mem_insert]; omega
+      have hcard_left :
+          ((Finset.Ico k (k + T)).filter P).card =
+            ((Finset.Ico (k + 1) (k + T)).filter P).card + (if P k then 1 else 0) := by
+        rw [hsplit_left, Finset.filter_insert]
+        by_cases hp : P k
+        · rw [if_pos hp]
+          exact Finset.card_insert_of_not_mem
+            (fun h => hk_notmem (Finset.filter_subset _ _ h))
+        · rw [if_neg hp, if_neg hp]
+      have hcard_right :
+          ((Finset.Ico (k + 1) (k + 1 + T)).filter P).card =
+            ((Finset.Ico (k + 1) (k + T)).filter P).card + (if P (k + T) then 1 else 0) := by
+        rw [hsplit_right, Finset.filter_insert]
+        by_cases hp : P (k + T)
+        · rw [if_pos hp]
+          exact Finset.card_insert_of_not_mem
+            (fun h => hkT_notmem (Finset.filter_subset _ _ h))
+        · rw [if_neg hp, if_neg hp]
+      have hif_eq : (if P k then 1 else 0) = (if P (k + T) then 1 else 0) := by
+        by_cases hp : P k
+        · rw [if_pos hp, if_pos ((hP k).mpr hp)]
+        · rw [if_neg hp, if_neg (fun hc => hp ((hP k).mp hc))]
+      show ((Finset.Ico (k + 1) (k + 1 + T)).filter P).card = ((Finset.Ico 0 T).filter P).card
+      rw [hcard_right, hif_eq, ← hcard_left, ih]
+
 theorem gdt_count_per_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) (b : ℕ) :
     ((Finset.Ico b (b + Tmin N m)).filter (accepted N m a)).card =
