@@ -472,20 +472,37 @@ lemma gcd_mod_eq (n R : ℕ) :
     Nat.gcd n R = Nat.gcd (n % R) R := by
   rw [Nat.gcd_comm n R, Nat.gcd_rec R n]
 
+lemma canonical_window_card_eq_range_coprime {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
+    (h : Admissible N m a) :
+    ((Finset.Ico 0 (Tmin N m)).filter
+        (fun n => (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧ Nat.gcd n (R N m) = 1)).card =
+      ((Finset.range (R N m)).filter (fun r => Nat.gcd r (R N m) = 1)).card := by
+  apply Finset.card_bij (fun n _ => n % R N m)
+  · rintro n hn
+    simp only [Finset.mem_filter, Finset.mem_Ico] at hn
+    obtain ⟨⟨-, hlt⟩, hmod, hgcd⟩ := hn
+    rw [Finset.mem_filter, Finset.mem_range]
+    exact ⟨Nat.mod_lt n (R_pos hN), by rwa [← gcd_mod_eq]⟩
+  · rintro n1 hn1 n2 hn2 heq
+    simp only [Finset.mem_filter, Finset.mem_Ico] at hn1 hn2
+    obtain ⟨⟨-, hlt1⟩, hmod1, -⟩ := hn1
+    obtain ⟨⟨-, hlt2⟩, hmod2, -⟩ := hn2
+    exact repr_unique hN hm hlt1 hlt2 hmod1 hmod2 heq
+  · rintro r hr
+    simp only [Finset.mem_filter, Finset.mem_range] at hr
+    obtain ⟨hrlt, hrcop⟩ := hr
+    obtain ⟨n, hnlt, hnmod, hnmodR⟩ := exists_repr_mod_R (a := a) hN hm hrlt
+    refine ⟨n, ?_, hnmodR⟩
+    simp only [Finset.mem_filter, Finset.mem_Ico]
+    exact ⟨⟨Nat.zero_le n, hnlt⟩, hnmod, by rw [gcd_mod_eq, hnmodR]; exact hrcop⟩
+
 lemma count_canonical_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
-    ((Finset.Ico 0 (Tmin N m)).filter (accepted N m a)).card =
-      Nat.totient (R N m) := by
-  have hfilter_eq :
-      (Finset.Ico 0 (Tmin N m)).filter (accepted N m a) =
-        (Finset.Ico 0 (Tmin N m)).filter
-          (fun (n : ℕ) =>
-            (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧
-            Nat.gcd n (R N m) = 1) :=
-    Finset.filter_congr
-      (fun n _ => accepted_iff_coprime_R hN hm h n)
-  rw [hfilter_eq]
-  sorry
+    ((Finset.Ico 0 (Tmin N m)).filter (accepted N m a)).card = Nat.totient (R N m) := by
+  rw [Finset.filter_congr (fun n _ => accepted_iff_coprime_R hN hm h n),
+      canonical_window_card_eq_range_coprime hN hm h]
+  unfold Nat.totient
+  exact Finset.filter_congr (fun r _ => Nat.coprime_comm)
 
 theorem gdt_count_per_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) (b : ℕ) :
