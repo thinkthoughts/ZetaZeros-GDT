@@ -41,3 +41,19 @@ The challenge file compiles with the seven expected `sorry` warnings:
 
 ```bash
 lake env lean Challenge/GeneralDivisionTheorem.lean
+```
+
+The completed solution compiles with no `sorry`:
+
+```bash
+lake env lean Solution/GeneralDivisionTheorem.lean
+```
+
+The complete project also builds successfully:
+
+```bash
+lake build
+```
+
+A successful build verifies the General Divisor Theorem solution
+against Lean and Mathlib.
