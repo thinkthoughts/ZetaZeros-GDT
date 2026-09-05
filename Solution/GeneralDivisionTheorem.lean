@@ -866,6 +866,23 @@ theorem gdt_density {N m q s : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     rw [hfirst, hsecond]
     ring
 
+lemma rad_factorization_eq_one {n : ℕ} (hn : 0 < n) {p : ℕ}
+    (hp : p ∈ n.primeFactors) :
+    (rad n).factorization p = 1 := by
+  have hsf : Squarefree (rad n) := rad_squarefree n
+  have hradpos : 0 < rad n := rad_pos n
+  have hle1 : (rad n).factorization p ≤ 1 :=
+    (Nat.squarefree_iff_factorization_le_one hradpos.ne').mp hsf p
+  have hmem : p ∈ (rad n).primeFactors := by
+    unfold rad
+    rwa [Nat.primeFactors_prod
+      (fun q hq => Nat.prime_of_mem_primeFactors hq)]
+  have hge1 : 1 ≤ (rad n).factorization p := by
+    rw [← Nat.support_factorization] at hmem
+    exact Nat.one_le_iff_ne_zero.mpr
+      (Finsupp.mem_support_iff.mp hmem)
+  omega
+
 /-- Exponent-blindness: `φ(n)/n` depends only on `rad n`. -/
 lemma totient_rad_mul (n : ℕ) (hn : 0 < n) :
     n * Nat.totient (rad n) = rad n * Nat.totient n := by
