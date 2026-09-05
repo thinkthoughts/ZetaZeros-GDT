@@ -32,3 +32,16 @@ lake env comparator Comparator/comparator.json
 ```
 
 This repository has been locally verified with the comparator.
+
+## General Divisor Theorem Benchmark
+
+This repository also contains a Lean formalization benchmark for the
+General Divisor Theorem.
+
+See [General_Divisor_Theorem/README.md](General_Divisor_Theorem/README.md)
+for the theorem source, benchmark specification, completed solution, and
+verification instructions.
+
+The benchmark contains seven theorem statements in
+`Challenge/GeneralDivisionTheorem.lean` and a complete proof in
+`Solution/GeneralDivisionTheorem.lean` with no `sorry`.
