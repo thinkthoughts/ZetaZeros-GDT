@@ -250,9 +250,63 @@ theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ} (h : Admiss
       exact coprime_add_mul_right.mpr hR0
     exact (gcd_with_N_iff_gcd_with_R hN hm h hmod').mpr hR1
 
+lemma exists_accepted {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
+    (h : Admissible N m a) : ∃ n, accepted N m a n := by
+  set aN : ℕ := (a % (m : ℤ)).toNat with haN_def
+
+  have haN_nonneg : (0 : ℤ) ≤ a % (m : ℤ) :=
+    Int.emod_nonneg a (by exact_mod_cast hm.ne')
+
+  have haN_eq : (aN : ℤ) = a % (m : ℤ) :=
+    Int.toNat_of_nonneg haN_nonneg
+
+  have haN_cong : (aN : ℤ) ≡ a [ZMOD (m : ℤ)] := by
+    show (aN : ℤ) % (m : ℤ) = a % (m : ℤ)
+    rw [haN_eq, Int.emod_emod_of_dvd a (dvd_refl (m : ℤ))]
+
+  obtain ⟨k, hk1, hk2⟩ :=
+    Nat.chineseRemainder (coprime_m_R hN) aN 1
+
+  refine ⟨k, ?_⟩
+  unfold accepted
+
+  have hcongm : ((k : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] := by
+    have hk1' : ((k : ℕ) : ℤ) ≡ (aN : ℤ) [ZMOD (m : ℤ)] := by
+      exact_mod_cast hk1
+    exact hk1'.trans haN_cong
+
+  refine ⟨hcongm, ?_⟩
+
+  have hgcdR : Nat.gcd k (R N m) = 1 := by
+    rw [gcd_mod_eq, hk2]
+
+  exact (gcd_with_N_iff_gcd_with_R hN hm h hcongm).mpr hgcdR
+
 theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {t : ℕ} (ht : 0 < t) (hp : IsPeriod N m a t) :
     Tmin N m ∣ t := by
+  obtain ⟨n0, hn0⟩ := exists_accepted hN hm h
+
+  have hn0t : accepted N m a (n0 + t) :=
+    (hp n0).mpr hn0
+
+  have hmt : m ∣ t := by
+    have hmod0 : (n0 : ℤ) ≡ a [ZMOD (m : ℤ)] :=
+      hn0.1
+
+    have hmodt : ((n0 + t : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] :=
+      hn0t.1
+
+    have hdiff :
+        ((n0 : ℤ) + (t : ℤ)) ≡ (n0 : ℤ) [ZMOD (m : ℤ)] := by
+      push_cast at hmodt
+      exact hmodt.trans hmod0.symm
+
+    have hmtZ : (m : ℤ) ∣ (t : ℤ) := by
+      simpa using (Int.modEq_iff_dvd.mp hdiff.symm)
+
+    exact_mod_cast hmtZ
+
   sorry
 
 /-- If a predicate on `ℕ` is invariant under adding `T`, then the count of elements
