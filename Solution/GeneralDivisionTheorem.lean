@@ -54,6 +54,7 @@ lemma d_mul_R_eq_rad {N m : ℕ} (hN : 0 < N) : d N m * R N m = rad N := by
 
 lemma rad_squarefree (n : ℕ) : Squarefree (rad n) := by
   unfold rad
+  change Squarefree (∏ p ∈ n.primeFactors, p)
   rw [Nat.squarefree_iff_factorization_le_one
     (Finset.prod_ne_zero_iff.mpr (fun p hp => (Nat.prime_of_mem_primeFactors hp).pos.ne'))]
   intro p
