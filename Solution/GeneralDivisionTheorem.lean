@@ -11,7 +11,32 @@ open GDT
 theorem gdt_empty {N m L : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : ¬ Admissible N m a) :
     S N L m a = ∅ := by
-  sorry
+  have h' : Nat.gcd a.natAbs (d N m) ≠ 1 := h
+  obtain ⟨p, hp, hpdvd⟩ := Nat.exists_prime_and_dvd h'
+  have hpa : p ∣ a.natAbs := hpdvd.trans (Nat.gcd_dvd_left _ _)
+  have hpd : p ∣ d N m := hpdvd.trans (Nat.gcd_dvd_right _ _)
+  have hp_mem : p ∈ (Nat.gcd m N).primeFactors := by
+    unfold d rad at hpd
+    obtain ⟨i, hi_mem, hpi⟩ := (hp.prime.dvd_finset_prod_iff id).mp hpd
+    have hi_prime : i.Prime := Nat.prime_of_mem_primeFactors hi_mem
+    have hpi_eq : p = i := (Nat.prime_dvd_prime_iff_eq hp hi_prime).mp hpi
+    rwa [hpi_eq]
+  have hp_gcd : p ∣ Nat.gcd m N := Nat.dvd_of_mem_primeFactors hp_mem
+  have hpm : p ∣ m := hp_gcd.trans (Nat.gcd_dvd_left _ _)
+  have hpN : p ∣ N := hp_gcd.trans (Nat.gcd_dvd_right _ _)
+  have hpa' : (p : ℤ) ∣ a := Int.dvd_natAbs.mp (Int.natCast_dvd_natCast.mpr hpa)
+  apply Finset.eq_empty_iff_forall_not_mem.mpr
+  intro n hn
+  simp only [S, Finset.mem_filter, accepted] at hn
+  obtain ⟨-, hmod, hcop⟩ := hn
+  have hmodp : (n : ℤ) ≡ a [ZMOD (p : ℤ)] :=
+    Int.ModEq.of_dvd (Int.natCast_dvd_natCast.mpr hpm) hmod
+  have ha0 : a ≡ 0 [ZMOD (p : ℤ)] := Int.modEq_zero_iff_dvd.mpr hpa'
+  have hn0 : (n : ℤ) ≡ 0 [ZMOD (p : ℤ)] := hmodp.trans ha0
+  have hpn : (p : ℤ) ∣ (n : ℤ) := Int.modEq_zero_iff_dvd.mp hn0
+  have hpn' : p ∣ n := by exact_mod_cast hpn
+  have hp_dvd_one : p ∣ 1 := hcop ▸ Nat.dvd_gcd hpn' hpN
+  exact absurd (Nat.le_of_dvd one_pos hp_dvd_one) (not_le.mpr hp.one_lt)
 
 theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
