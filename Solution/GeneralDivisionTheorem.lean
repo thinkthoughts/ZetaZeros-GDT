@@ -397,7 +397,7 @@ lemma count_canonical_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   have hfilter_eq :
       (Finset.Ico 0 (Tmin N m)).filter (accepted N m a) =
         (Finset.Ico 0 (Tmin N m)).filter
-          (fun n =>
+          (fun (n : ℕ) =>
             (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧
             Nat.gcd n (R N m) = 1) :=
     Finset.filter_congr
