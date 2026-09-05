@@ -875,8 +875,10 @@ lemma rad_factorization_eq_one {n : ℕ} (hn : 0 < n) {p : ℕ}
     (Nat.squarefree_iff_factorization_le_one hradpos.ne').mp hsf p
   have hmem : p ∈ (rad n).primeFactors := by
     unfold rad
-    rwa [Nat.primeFactors_prod
+    change p ∈ (∏ q ∈ n.primeFactors, q).primeFactors
+    rw [Nat.primeFactors_prod
       (fun q hq => Nat.prime_of_mem_primeFactors hq)]
+    exact hp
   have hge1 : 1 ≤ (rad n).factorization p := by
     rw [← Nat.support_factorization] at hmem
     exact Nat.one_le_iff_ne_zero.mpr
