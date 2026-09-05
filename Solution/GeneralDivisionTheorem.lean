@@ -16,11 +16,11 @@ theorem gdt_empty {N m L : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   have hpa : p ∣ a.natAbs := hpdvd.trans (Nat.gcd_dvd_left _ _)
   have hpd : p ∣ d N m := hpdvd.trans (Nat.gcd_dvd_right _ _)
   have hp_mem : p ∈ (Nat.gcd m N).primeFactors := by
-    unfold d rad at hpd
-    obtain ⟨i, hi_mem, hpi⟩ := (hp.prime.dvd_finset_prod_iff id).mp hpd
-    have hi_prime : i.Prime := Nat.prime_of_mem_primeFactors hi_mem
-    have hpi_eq : p = i := (Nat.prime_dvd_prime_iff_eq hp hi_prime).mp hpi
-    rwa [hpi_eq]
+    have hgcd_ne : Nat.gcd m N ≠ 0 := (Nat.gcd_pos_of_pos_left N hm).ne'
+    have hrad_dvd : rad (Nat.gcd m N) ∣ Nat.gcd m N :=
+      Nat.prod_primeFactors_dvd (Nat.gcd m N)
+    unfold d at hpd
+    exact Nat.mem_primeFactors.mpr ⟨hp, hpd.trans hrad_dvd, hgcd_ne⟩
   have hp_gcd : p ∣ Nat.gcd m N := Nat.dvd_of_mem_primeFactors hp_mem
   have hpm : p ∣ m := hp_gcd.trans (Nat.gcd_dvd_left _ _)
   have hpN : p ∣ N := hp_gcd.trans (Nat.gcd_dvd_right _ _)
