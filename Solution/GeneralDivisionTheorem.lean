@@ -933,7 +933,24 @@ lemma totient_rad_mul (n : ℕ) (hn : 0 < n) :
 theorem gdt_correction_factor {N m : ℕ} (hN : 0 < N) (hm : 0 < m) :
     Nat.totient (R N m) * N * Nat.totient (d N m) =
       d N m * R N m * Nat.totient N := by
-  sorry
+  have hcop : Nat.Coprime (d N m) (R N m) :=
+    coprime_d_R hN
+
+  have hrad : d N m * R N m = rad N :=
+    d_mul_R_eq_rad hN
+
+  calc
+    Nat.totient (R N m) * N * Nat.totient (d N m)
+        = N * (Nat.totient (d N m) * Nat.totient (R N m)) := by
+            ring
+    _ = N * Nat.totient (d N m * R N m) := by
+            rw [Nat.totient_mul hcop]
+    _ = N * Nat.totient (rad N) := by
+            rw [hrad]
+    _ = rad N * Nat.totient N := by
+            exact totient_rad_mul N hN
+    _ = d N m * R N m * Nat.totient N := by
+            rw [← hrad]
 
 theorem general_divisor_theorem {N m L : ℕ} (hN : 0 < N) (hm : 0 < m) (a : ℤ) :
     (¬ Admissible N m a → S N L m a = ∅) ∧
