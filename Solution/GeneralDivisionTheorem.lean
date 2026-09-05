@@ -390,6 +390,62 @@ lemma accepted_iff_coprime_R {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   · rintro ⟨hmod, hgcdR⟩
     exact ⟨hmod, (gcd_with_N_iff_gcd_with_R hN hm h hmod).mpr hgcdR⟩
 
+/-- `rad n` is always positive. -/
+lemma rad_pos (n : ℕ) : 0 < rad n := by
+  unfold rad
+  exact Finset.prod_pos
+    (fun p hp => (Nat.prime_of_mem_primeFactors hp).pos)
+
+/-- `R N m` is positive when `N > 0`. -/
+lemma R_pos {N m : ℕ} (hN : 0 < N) : 0 < R N m := by
+  have heq := d_mul_R_eq_rad (N := N) (m := m) hN
+  have hrad_pos := rad_pos N
+  rcases Nat.eq_zero_or_pos (R N m) with hR0 | hR
+  · rw [hR0, mul_zero] at heq
+    omega
+  · exact hR
+
+/-- Every residue `r < R N m` has a representative in the canonical window
+with the prescribed residue mod `m`. -/
+lemma exists_repr_mod_R {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ} {r : ℕ}
+    (hr : r < R N m) :
+    ∃ n, n < Tmin N m ∧
+      (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧
+      n % R N m = r := by
+  set aN : ℕ := (a % (m : ℤ)).toNat with haN_def
+  have haN_nonneg : (0 : ℤ) ≤ a % (m : ℤ) :=
+    Int.emod_nonneg a (by exact_mod_cast hm.ne')
+  have haN_eq : (aN : ℤ) = a % (m : ℤ) :=
+    Int.toNat_of_nonneg haN_nonneg
+  have haN_cong : (aN : ℤ) ≡ a [ZMOD (m : ℤ)] := by
+    show (aN : ℤ) % (m : ℤ) = a % (m : ℤ)
+    rw [haN_eq, Int.emod_emod_of_dvd a (dvd_refl (m : ℤ))]
+  obtain ⟨k, hk1, hk2⟩ :=
+    Nat.chineseRemainder (coprime_m_R hN) aN r
+  have hTmin_pos : 0 < Tmin N m := by
+    unfold Tmin
+    exact Nat.mul_pos hm (R_pos hN)
+  have hTdvd_m : m ∣ Tmin N m := ⟨R N m, rfl⟩
+  have hTdvd_R : R N m ∣ Tmin N m := ⟨m, by
+    unfold Tmin
+    ring⟩
+  refine ⟨k % Tmin N m, Nat.mod_lt k hTmin_pos, ?_, ?_⟩
+  · have hstep : k % Tmin N m ≡ k [MOD m] :=
+      Nat.ModEq.of_dvd hTdvd_m (Nat.mod_modEq k (Tmin N m))
+    have hnm : k % Tmin N m ≡ aN [MOD m] :=
+      hstep.trans hk1
+    have hz :
+        ((k % Tmin N m : ℕ) : ℤ) ≡ (aN : ℤ) [ZMOD (m : ℤ)] := by
+      exact_mod_cast hnm
+    exact hz.trans haN_cong
+  · have hstep : k % Tmin N m ≡ k [MOD R N m] :=
+      Nat.ModEq.of_dvd hTdvd_R (Nat.mod_modEq k (Tmin N m))
+    have hnR : k % Tmin N m ≡ r [MOD R N m] :=
+      hstep.trans hk2
+    calc
+      k % Tmin N m % R N m = r % R N m := hnR
+      _ = r := Nat.mod_eq_of_lt hr
+
 lemma count_canonical_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
     ((Finset.Ico 0 (Tmin N m)).filter (accepted N m a)).card =
