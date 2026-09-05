@@ -190,10 +190,65 @@ lemma gcd_with_N_iff_gcd_with_R
   rw [hcoN]
   exact ⟨fun h => h.2, fun h => ⟨hcop_d, h⟩⟩
 
-theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
-    (h : Admissible N m a) :
+/-- Adding a multiple of `e` to `k` doesn't change coprimality with `e`. -/
+lemma coprime_add_mul_right {k c e : ℕ} :
+    Nat.Coprime (k + e * c) e ↔ Nat.Coprime k e := by
+  constructor
+  · intro h
+    by_contra hne
+    have hne' : Nat.gcd k e ≠ 1 := hne
+    obtain ⟨p, hp, hpdvd⟩ := Nat.exists_prime_and_dvd hne'
+    have hpk : p ∣ k := hpdvd.trans (Nat.gcd_dvd_left _ _)
+    have hpe : p ∣ e := hpdvd.trans (Nat.gcd_dvd_right _ _)
+    have hpsum : p ∣ k + e * c := hpk.add (hpe.mul_right c)
+    have hcontra : p ∣ Nat.gcd (k + e * c) e := Nat.dvd_gcd hpsum hpe
+    have heq : Nat.gcd (k + e * c) e = 1 := h
+    rw [heq] at hcontra
+    exact absurd (Nat.le_of_dvd one_pos hcontra) (not_le.mpr hp.one_lt)
+  · intro h
+    by_contra hne
+    have hne' : Nat.gcd (k + e * c) e ≠ 1 := hne
+    obtain ⟨p, hp, hpdvd⟩ := Nat.exists_prime_and_dvd hne'
+    have hpsum : p ∣ k + e * c := hpdvd.trans (Nat.gcd_dvd_left _ _)
+    have hpe : p ∣ e := hpdvd.trans (Nat.gcd_dvd_right _ _)
+    have hpec : p ∣ e * c := hpe.mul_right c
+    have hpk : p ∣ k := (Nat.dvd_add_right hpec).mp (by rwa [add_comm] at hpsum)
+    have hcontra : p ∣ Nat.gcd k e := Nat.dvd_gcd hpk hpe
+    have heq : Nat.gcd k e = 1 := h
+    rw [heq] at hcontra
+    exact absurd (Nat.le_of_dvd one_pos hcontra) (not_le.mpr hp.one_lt)
+
+theorem gdt_periodic {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ} (h : Admissible N m a) :
     IsPeriod N m a (Tmin N m) := by
-  sorry
+  intro n
+  unfold accepted
+  have hTmin_eq : Tmin N m = R N m * m := by unfold Tmin; ring
+  have hm_dvd_Tmin : (m : ℤ) ∣ (Tmin N m : ℤ) := by
+    have : m ∣ Tmin N m := ⟨R N m, rfl⟩
+    exact_mod_cast this
+  have hshift_m : ((n : ℤ) + Tmin N m) ≡ (n : ℤ) [ZMOD (m : ℤ)] := by
+    have hz : (Tmin N m : ℤ) ≡ 0 [ZMOD (m : ℤ)] := Int.modEq_zero_iff_dvd.mpr hm_dvd_Tmin
+    simpa using Int.ModEq.add_left (n : ℤ) hz
+  have hcast_eq : ((n + Tmin N m : ℕ) : ℤ) = (n : ℤ) + Tmin N m := by push_cast; ring
+  constructor
+  · rintro ⟨hmod, hgcd⟩
+    have hR1 : Nat.gcd (n + Tmin N m) (R N m) = 1 :=
+      (gcd_with_N_iff_gcd_with_R hN hm h hmod).mp hgcd
+    have hmod_n : (n : ℤ) ≡ a [ZMOD (m : ℤ)] := hshift_m.symm.trans (hcast_eq ▸ hmod)
+    refine ⟨hmod_n, ?_⟩
+    have hR0 : Nat.gcd n (R N m) = 1 := by
+      rw [hTmin_eq] at hR1
+      exact coprime_add_mul_right.mp hR1
+    exact (gcd_with_N_iff_gcd_with_R hN hm h hmod_n).mpr hR0
+  · rintro ⟨hmod, hgcd⟩
+    have hmod' : ((n + Tmin N m : ℕ) : ℤ) ≡ a [ZMOD (m : ℤ)] := by
+      rw [hcast_eq]; exact hshift_m.trans hmod
+    refine ⟨hmod', ?_⟩
+    have hR0 : Nat.gcd n (R N m) = 1 := (gcd_with_N_iff_gcd_with_R hN hm h hmod).mp hgcd
+    have hR1 : Nat.gcd (n + Tmin N m) (R N m) = 1 := by
+      rw [hTmin_eq]
+      exact coprime_add_mul_right.mpr hR0
+    exact (gcd_with_N_iff_gcd_with_R hN hm h hmod').mpr hR1
 
 theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {t : ℕ} (ht : 0 < t) (hp : IsPeriod N m a t) :
