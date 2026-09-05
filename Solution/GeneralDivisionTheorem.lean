@@ -518,27 +518,47 @@ lemma exists_accepted {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
 lemma primeFactors_forall_dvd_imp_dvd {n t : ℕ} (hn : 0 < n)
     (hall : ∀ p ∈ n.primeFactors, p ∣ t) : rad n ∣ t := by
   unfold rad
-  induction n.primeFactors using Finset.induction with
-  | empty =>
-      simp
-  | @insert p s hpnot ih =>
-      rw [Finset.prod_insert hpnot]
-      have hpprime : p.Prime := by
-        apply Nat.prime_of_mem_primeFactors
-        exact Finset.mem_insert_self p s
-      have hsprime : ∀ q ∈ s, q.Prime := by
-        intro q hq
-        apply Nat.prime_of_mem_primeFactors
-        exact Finset.mem_insert_of_mem hq
-      have hpdvd : p ∣ t :=
-        hall p (Finset.mem_insert_self p s)
-      have hsdvd : (∏ q ∈ s, q) ∣ t := by
-        apply ih
-        intro q hq
-        exact hall q (Finset.mem_insert_of_mem hq)
-      have hcop : Nat.Coprime p (∏ q ∈ s, q) := by
-        exact prime_coprime_prod hpprime hsprime hpnot
-      exact Nat.Coprime.mul_dvd_of_dvd_of_dvd hcop hpdvd hsdvd
+  have aux : ∀ s : Finset ℕ, s ⊆ n.primeFactors →
+      (∀ p ∈ s, p ∣ t) → s.prod id ∣ t := by
+    intro s
+    induction s using Finset.induction with
+    | empty =>
+        intro hsub hall'
+        simp
+    | @insert p s hps ih =>
+        intro hsub hall'
+        rw [Finset.prod_insert hps]
+
+        have hp_mem_n : p ∈ n.primeFactors :=
+          hsub (Finset.mem_insert_self p s)
+
+        have hs_sub : s ⊆ n.primeFactors := by
+          intro q hq
+          exact hsub (Finset.mem_insert_of_mem hq)
+
+        have hpdvd : p ∣ t :=
+          hall' p (Finset.mem_insert_self p s)
+
+        have hsdvd : s.prod id ∣ t := by
+          apply ih hs_sub
+          intro q hq
+          exact hall' q (Finset.mem_insert_of_mem hq)
+
+        have hpprime : p.Prime :=
+          Nat.prime_of_mem_primeFactors hp_mem_n
+
+        have hsprime : ∀ q ∈ s, q.Prime := by
+          intro q hq
+          exact Nat.prime_of_mem_primeFactors (hs_sub hq)
+
+        have hcop : Nat.Coprime p (s.prod id) :=
+          prime_coprime_prod hpprime hsprime hps
+
+        exact Nat.Coprime.mul_dvd_of_dvd_of_dvd hcop hpdvd hsdvd
+
+  exact aux n.primeFactors (by
+    intro p hp
+    exact hp) hall
 
 lemma exists_witness_avoiding_dvd {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {p : ℕ} (hp : p.Prime) (hpR : p ∣ R N m) :
