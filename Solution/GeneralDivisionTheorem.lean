@@ -678,7 +678,7 @@ theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
 
     exact_mod_cast hmtZ
 
-    have hradRt : rad (R N m) ∣ t := by
+      have hradRt : rad (R N m) ∣ t := by
     apply primeFactors_forall_dvd_imp_dvd (R_pos hN)
     intro p hpmem
 
@@ -744,8 +744,7 @@ theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
       (not_le.mpr hpp.one_lt)
 
   have hRt : R N m ∣ t := by
-    have hrad :
-        rad (R N m) = R N m :=
+    have hrad : rad (R N m) = R N m :=
       rad_eq_self_of_squarefree (R_pos hN) (R_squarefree hN)
     rw [hrad] at hradRt
     exact hradRt
@@ -753,6 +752,9 @@ theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   have hmR : m * R N m ∣ t :=
     Nat.Coprime.mul_dvd_of_dvd_of_dvd
       (coprime_m_R hN) hmt hRt
+
+  unfold Tmin
+  exact hmR
 
   unfold Tmin
   exact hmR
