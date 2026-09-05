@@ -648,52 +648,10 @@ lemma exists_coprime_R_neg_t_mod_p {N m : ℕ} (hN : 0 < N) {p t : ℕ} (hp : p.
     have hr_int : (r:ℤ) ≡ (rp:ℤ) [ZMOD (p:ℤ)] := by exact_mod_cast hr_modeq_rp
     exact hr_int.trans hrp_cong
 
-lemma rad_eq_self_of_squarefree {n : ℕ} (hn : 0 < n) (hsf : Squarefree n) :
+lemma rad_eq_self_of_squarefree {n : ℕ} (_hn : 0 < n) (hsf : Squarefree n) :
     rad n = n := by
-  obtain ⟨k, hk⟩ := rad_dvd_self n
-
-  have hsf_mul : Squarefree (rad n * k) := by
-    rw [← hk]
-    exact hsf
-
-  have hcop : Nat.Coprime (rad n) k :=
-    (Nat.squarefree_mul_iff.mp hsf_mul).1
-
-  have hk1 : k = 1 := by
-    by_contra hk1
-    obtain ⟨q, hq, hqk⟩ := Nat.exists_prime_and_dvd hk1
-
-    have hkn : k ∣ n := by
-      refine ⟨rad n, ?_⟩
-      rw [hk]
-      ring
-
-    have hqn : q ∣ n := hqk.trans hkn
-
-    have hq_mem : q ∈ n.primeFactors :=
-      Nat.mem_primeFactors.mpr ⟨hq, hqn, hn.ne'⟩
-
-    have hqrad_mem : q ∈ (rad n).primeFactors := by
-      unfold rad
-      change q ∈ (∏ r ∈ n.primeFactors, r).primeFactors
-      rw [Nat.primeFactors_prod
-        (fun r hr => Nat.prime_of_mem_primeFactors hr)]
-      exact hq_mem
-
-    have hqrad : q ∣ rad n :=
-      Nat.dvd_of_mem_primeFactors hqrad_mem
-
-    have hcontra : q ∣ Nat.gcd (rad n) k :=
-      Nat.dvd_gcd hqrad hqk
-
-    have heq : Nat.gcd (rad n) k = 1 := hcop
-    rw [heq] at hcontra
-
-    exact absurd
-      (Nat.le_of_dvd one_pos hcontra)
-      (not_le.mpr hq.one_lt)
-
-  rw [hk, hk1, mul_one]
+  unfold rad
+  exact Nat.prod_primeFactors_of_squarefree hsf
 
 theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) {t : ℕ} (ht : 0 < t) (hp : IsPeriod N m a t) :
