@@ -678,7 +678,84 @@ theorem gdt_minimal_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
 
     exact_mod_cast hmtZ
 
-  sorry
+    have hradRt : rad (R N m) ∣ t := by
+    apply primeFactors_forall_dvd_imp_dvd (R_pos hN)
+    intro p hpmem
+
+    have hpp : p.Prime :=
+      Nat.prime_of_mem_primeFactors hpmem
+
+    have hpR : p ∣ R N m :=
+      Nat.dvd_of_mem_primeFactors hpmem
+
+    by_contra hpt
+
+    obtain ⟨r, hrlt, hrcop, hrneg⟩ :=
+      exists_coprime_R_neg_t_mod_p hN hpp hpR hpt
+
+    obtain ⟨n1, hn1lt, hn1mod, hn1modR⟩ :=
+      exists_repr_mod_R (a := a) hN hm hrlt
+
+    have hgcdR1 : Nat.gcd n1 (R N m) = 1 := by
+      rw [gcd_mod_eq, hn1modR]
+      exact hrcop
+
+    have hn1acc : accepted N m a n1 := by
+      refine ⟨hn1mod, ?_⟩
+      exact (gcd_with_N_iff_gcd_with_R hN hm h hn1mod).mpr hgcdR1
+
+    have hn1tacc : accepted N m a (n1 + t) :=
+      (hp n1).mpr hn1acc
+
+    have hn1_modR : n1 ≡ r [MOD R N m] := by
+      unfold Nat.ModEq
+      rw [hn1modR, Nat.mod_eq_of_lt hrlt]
+
+    have hn1_modp_nat : n1 ≡ r [MOD p] :=
+      Nat.ModEq.of_dvd hpR hn1_modR
+
+    have hn1_modp : (n1 : ℤ) ≡ (r : ℤ) [ZMOD (p : ℤ)] := by
+      exact_mod_cast hn1_modp_nat
+
+    have hn1_neg_t : (n1 : ℤ) ≡ -(t : ℤ) [ZMOD (p : ℤ)] :=
+      hn1_modp.trans hrneg
+
+    have hsum0 :
+        (n1 : ℤ) + (t : ℤ) ≡ 0 [ZMOD (p : ℤ)] := by
+      have hsum :=
+        Int.ModEq.add_right (t : ℤ) hn1_neg_t
+      simpa using hsum
+
+    have hp_sumZ : (p : ℤ) ∣ ((n1 : ℤ) + (t : ℤ)) :=
+      Int.modEq_zero_iff_dvd.mp hsum0
+
+    have hp_sum : p ∣ n1 + t := by
+      exact_mod_cast hp_sumZ
+
+    have hgcdRt : Nat.gcd (n1 + t) (R N m) = 1 :=
+      (gcd_with_N_iff_gcd_with_R hN hm h hn1tacc.1).mp hn1tacc.2
+
+    have hp_one : p ∣ 1 := by
+      rw [← hgcdRt]
+      exact Nat.dvd_gcd hp_sum hpR
+
+    exact absurd
+      (Nat.le_of_dvd one_pos hp_one)
+      (not_le.mpr hpp.one_lt)
+
+  have hRt : R N m ∣ t := by
+    have hrad :
+        rad (R N m) = R N m :=
+      rad_eq_self_of_squarefree (R_pos hN) (R_squarefree hN)
+    rw [hrad] at hradRt
+    exact hradRt
+
+  have hmR : m * R N m ∣ t :=
+    Nat.Coprime.mul_dvd_of_dvd_of_dvd
+      (coprime_m_R hN) hmt hRt
+
+  unfold Tmin
+  exact hmR
 
 lemma canonical_window_card_eq_range_coprime {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) :
