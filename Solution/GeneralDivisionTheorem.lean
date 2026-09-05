@@ -538,7 +538,7 @@ lemma S_eq_filter_Ico (N L m : ℕ) (a : ℤ) :
   apply Finset.ext
   intro n
   simp only [Finset.mem_filter, Finset.mem_Icc, Finset.mem_Ico]
-  omega
+  simp [Nat.lt_succ_iff]
 
 theorem gdt_density {N m q s : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) (hs : s < Tmin N m) :
@@ -547,18 +547,30 @@ theorem gdt_density {N m q s : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
   induction q with
   | zero => simp
   | succ k ih =>
-    have hsplit : (k + 1) * Tmin N m + s = (k * Tmin N m + s) + Tmin N m := by ring
-    rw [hsplit, S_eq_Ico]
-    rw [card_filter_Ico_split (a := 1) (b := k * Tmin N m + s + 1)
-        (c := k * Tmin N m + s + Tmin N m + 1) (by omega) (by omega)]
-    have hfirst : ((Finset.Ico 1 (k * Tmin N m + s + 1)).filter (accepted N m a)).card
-        = k * Nat.totient (R N m) + (S N s m a).card := by
-      rw [← S_eq_Ico]; exact ih
-    have hsecond : ((Finset.Ico (k * Tmin N m + s + 1)
-        (k * Tmin N m + s + Tmin N m + 1)).filter (accepted N m a)).card
-        = Nat.totient (R N m) := by
-      have heq : k * Tmin N m + s + Tmin N m + 1
-          = (k * Tmin N m + s + 1) + Tmin N m := by ring
+    have hsplit : (k + 1) * Tmin N m + s =
+        (k * Tmin N m + s) + Tmin N m := by
+      ring
+    rw [hsplit, S_eq_filter_Ico]
+    rw [card_filter_Ico_split
+      (a := 1)
+      (b := k * Tmin N m + s + 1)
+      (c := k * Tmin N m + s + Tmin N m + 1)
+      (by omega) (by omega)]
+    have hfirst :
+        ((Finset.Ico 1 (k * Tmin N m + s + 1)).filter
+          (accepted N m a)).card =
+          k * Nat.totient (R N m) + (S N s m a).card := by
+      rw [← S_eq_filter_Ico]
+      exact ih
+    have hsecond :
+        ((Finset.Ico (k * Tmin N m + s + 1)
+          (k * Tmin N m + s + Tmin N m + 1)).filter
+          (accepted N m a)).card =
+          Nat.totient (R N m) := by
+      have heq :
+          k * Tmin N m + s + Tmin N m + 1 =
+            (k * Tmin N m + s + 1) + Tmin N m := by
+        ring
       rw [heq]
       exact gdt_count_per_period hN hm h (k * Tmin N m + s + 1)
     rw [hfirst, hsecond]
