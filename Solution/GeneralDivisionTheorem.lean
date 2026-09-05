@@ -579,7 +579,7 @@ theorem gdt_density {N m q s : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
 /-- Exponent-blindness: `φ(n)/n` depends only on `rad n`. -/
 lemma totient_rad_mul (n : ℕ) (hn : 0 < n) :
     n * Nat.totient (rad n) = rad n * Nat.totient n := by
-  apply?
+  sorry
 
 theorem gdt_correction_factor {N m : ℕ} (hN : 0 < N) (hm : 0 < m) :
     Nat.totient (R N m) * N * Nat.totient (d N m) =
