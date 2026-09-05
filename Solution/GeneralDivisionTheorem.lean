@@ -379,6 +379,32 @@ lemma coprime_m_R {N m : ℕ} (hN : 0 < N) :
     (Nat.le_of_dvd one_pos hcontra)
     (not_le.mpr hp.one_lt)
 
+lemma accepted_iff_coprime_R {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
+    (h : Admissible N m a) (n : ℕ) :
+    accepted N m a n ↔
+      (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧ Nat.gcd n (R N m) = 1 := by
+  unfold accepted
+  constructor
+  · rintro ⟨hmod, hgcd⟩
+    exact ⟨hmod, (gcd_with_N_iff_gcd_with_R hN hm h hmod).mp hgcd⟩
+  · rintro ⟨hmod, hgcdR⟩
+    exact ⟨hmod, (gcd_with_N_iff_gcd_with_R hN hm h hmod).mpr hgcdR⟩
+
+lemma count_canonical_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
+    (h : Admissible N m a) :
+    ((Finset.Ico 0 (Tmin N m)).filter (accepted N m a)).card =
+      Nat.totient (R N m) := by
+  have hfilter_eq :
+      (Finset.Ico 0 (Tmin N m)).filter (accepted N m a) =
+        (Finset.Ico 0 (Tmin N m)).filter
+          (fun n =>
+            (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧
+            Nat.gcd n (R N m) = 1) :=
+    Finset.filter_congr
+      (fun n _ => accepted_iff_coprime_R hN hm h n)
+  rw [hfilter_eq]
+  sorry
+
 theorem gdt_count_per_period {N m : ℕ} (hN : 0 < N) (hm : 0 < m) {a : ℤ}
     (h : Admissible N m a) (b : ℕ) :
     ((Finset.Ico b (b + Tmin N m)).filter (accepted N m a)).card =
