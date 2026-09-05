@@ -15,45 +15,6 @@ coprime to `N`. Source: thinkthoughts, Draft v3.3, Theorem 3 (§2.2). -/
 
 @[expose] public section
 
-namespace GDT
-
-/-- The radical of `n`: the product of the distinct primes dividing `n`. `rad 1 = 1`. -/
-def rad (n : ℕ) : ℕ := n.primeFactors.prod id
-
-/-- `d = rad(gcd(m, N))`: the radical of the primes shared between `m` and `N`. -/
-def d (N m : ℕ) : ℕ := rad (Nat.gcd m N)
-
-/-- `R = rad(N) / d`. -/
-def R (N m : ℕ) : ℕ := rad N / d N m
-
-/-- The claimed exact minimal period `Tmin = mR`. -/
-def Tmin (N m : ℕ) : ℕ := m * R N m
-
-/-- `a` is admissible for `(N, m)` exactly when `gcd(a, d) = 1`, via `a.natAbs` so the
-condition is stated without depending on `Int.gcd`'s exact signature. -/
-def Admissible (N m : ℕ) (a : ℤ) : Prop :=
-  Nat.gcd a.natAbs (d N m) = 1
-
-/-- The acceptance indicator: `n ≡ a (mod m)` and `n` coprime to `N`. -/
-def accepted (N m : ℕ) (a : ℤ) (n : ℕ) : Prop :=
-  (n : ℤ) ≡ a [ZMOD (m : ℤ)] ∧ Nat.gcd n N = 1
-
-instance acceptedDecidable (N m : ℕ) (a : ℤ) :
-    DecidablePred (accepted N m a) := by
-  intro n
-  unfold accepted
-  apply instDecidableAnd
-
-/-- `S(N, L, m, a) = {1 ≤ n ≤ L : n ≡ a (mod m), gcd(n, N) = 1}`. -/
-def S (N L m : ℕ) (a : ℤ) : Finset ℕ :=
-  (Finset.Icc 1 L).filter (accepted N m a)
-
-/-- `t` is a period of the acceptance indicator. -/
-def IsPeriod (N m : ℕ) (a : ℤ) (t : ℕ) : Prop :=
-  ∀ n : ℕ, accepted N m a (n + t) ↔ accepted N m a n
-
-end GDT
-
 namespace GDT.Challenge
 
 open GDT
